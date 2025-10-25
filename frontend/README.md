@@ -1,3 +1,11 @@
+# Adres backendu jest adresem IP maszyny, z której odpalamy dockera- aby nam działało
+robimy folder /frontend/.env
+dodajemy:
+
+EXPO_PUBLIC_API_URL=http://`Nasz adres`/api/test/string/
+
+
+
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
