@@ -241,9 +241,11 @@ SIMPLE_JWT = {
 # CORS configuration for allowing frontend to access the API
 # CORS = Cross-Origin Resource Sharing
 # Allows JavaScript from these origins to make requests to our API
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:19006",     # React Native Expo
-]
+CORS_ALLOWE_ALL_ORIGINS = True
+#= [
+#    "http://localhost:19006",     # React Native Expo
+#    "http://localhost:8001" # Web frontend (if any)
+#]
 
 # Allow cookies/auth headers in cross-origin requests
 CORS_ALLOW_CREDENTIALS = True

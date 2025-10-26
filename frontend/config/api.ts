@@ -1,0 +1,7 @@
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+
+export const ENDPOINTS = {
+  LOGIN: '/api/v1/auth/login/',              
+  USER_INFO: '/api/v1/auth/user/',
+  TEST: '/api/test/string/',                        
+};
