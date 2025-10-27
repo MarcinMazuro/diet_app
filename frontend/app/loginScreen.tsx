@@ -14,7 +14,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!username || !password) {
-      Alert.alert('Błąd', 'Wypełnij wszystkie pola');
+      Alert.alert('Error', 'Fill in every box');
       return;
     }
 
@@ -22,13 +22,13 @@ export default function LoginScreen() {
     
     try {
       await loginUser(username, password);
-      // Przekierowanie po udanym logowaniu
+      // Routing after successful log in 
       router.replace('/(tabs)');
       
     } catch (err) {
-      //Obsługa błędów i wyświetlenie komunikatu
-      const msg = err instanceof Error ? err.message : 'Nie udało się zalogować';
-      Alert.alert('Błąd logowania', msg);
+      // Errors and messages
+      const msg = err instanceof Error ? err.message : 'Could not log in';
+      Alert.alert('Log in error', msg);
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ export default function LoginScreen() {
       {loading ? (
         <ActivityIndicator size="large" style={{ marginTop: 12 }} />
       ) : (
-        <Button title="Zaloguj się" onPress={handleLogin} />
+        <Button title="Log in" onPress={handleLogin} />
       )}
     </View>
   );

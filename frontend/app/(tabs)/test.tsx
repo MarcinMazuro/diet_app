@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { API_URL, ENDPOINTS } from '../../config/api';
 
 export default function Test() {
-  const [data, setData] = useState('Ładowanie...');
+  const [data, setData] = useState('Loading...');
 
   useEffect(() => {
     const url = `${API_URL}${ENDPOINTS.TEST}`;
@@ -11,7 +11,7 @@ export default function Test() {
       .then(async response => {
         const ct = response.headers.get('content-type') ?? '';
         const text = await response.text();
-        if (!ct.includes('application/json')) throw new Error(`Nieoczekiwana odpowiedź: ${text}`);
+        if (!ct.includes('application/json')) throw new Error(`Unexpected respond: ${text}`);
         return JSON.parse(text);
       })
       .then(json => setData(json.message ?? JSON.stringify(json)))

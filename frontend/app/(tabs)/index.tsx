@@ -11,7 +11,7 @@ export default function Index() {
     >
       <Text
       style={{ color: "orange", fontSize: 24, marginBottom: 20 }}
-      >Widok główny (dodawanie produktów)</Text>
+      >Main view (Adding products)</Text>
      
     </View>
   );

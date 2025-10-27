@@ -3,36 +3,36 @@ import { API_URL, ENDPOINTS } from '../config/api';
 import 'expo-router';
 
 /**
- * Obsługuje logowanie użytkownika, komunikację z API i zapis tokenów.
+ * Log in a user with given credentials.
  */
 export async function loginUser(username: string, password: string): Promise<void> {
-  //Wysłanie żądania POST
+  //Send login request
   const res = await fetch(`${API_URL}${ENDPOINTS.LOGIN}`, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
   });
 
-  //Parsowanie odpowiedzi
+  //Response handling
   const ct = res.headers.get('content-type') ?? '';
   const text = await res.text();
   if (!ct.includes('application/json')) {
-    throw new Error(`Nieoczekiwana odpowiedź z serwera: ${text}`);
+    throw new Error(`Unexpected respond from server: ${text}`);
   }
   const data = JSON.parse(text);
 
-  //Obsługa błędów HTTP (statusy 4xx/5xx)
+  //Http error handling
   if (!res.ok) {
 
     const msgs = Object.values(data).flat?.() ?? [];
-    throw new Error(msgs.length ? msgs.join(' ') : 'Błąd logowania');
+    throw new Error(msgs.length ? msgs.join(' ') : 'Log in failed');
   }
 
-  //Pobranie i walidacja tokena dostępu
+  //Extract tokens from response
   const accessToken = data.access ?? data.key ?? data.token ?? data.access_token ?? null;
-  if (!accessToken) throw new Error('Brak tokena w odpowiedzi serwera');
+  if (!accessToken) throw new Error('No access token in response');
 
-  //Bezpieczny zapis tokenów
+  //Store tokens securely
   await SecureStore.setItemAsync('accessToken', accessToken);
   const refreshToken = data.refresh ?? data.refresh_token ?? null;
   if (refreshToken) await SecureStore.setItemAsync('refreshToken', refreshToken);

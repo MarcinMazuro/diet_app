@@ -12,12 +12,12 @@ export default function TabsLayout() {
   useEffect(() => {
     (async () => {
       try {
-        const token = await SecureStore.getItemAsync("userToken");
+        const token = await SecureStore.getItemAsync("accessToken");
         if (!token) {
-          router.replace("/loginScreen"); // bez slasha
+          router.replace("/loginScreen");
         }
       } catch {
-        router.replace("/loginScreen"); // bez slasha
+        router.replace("/loginScreen");
       } finally {
         setChecking(false);
       }
