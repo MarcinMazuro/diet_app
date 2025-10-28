@@ -1,19 +1,28 @@
 import * as SecureStore from 'expo-secure-store';
 import { API_URL, ENDPOINTS } from '../config/api';
-import 'expo-router';
 
-/**
- * Log in a user with given credentials.
- */
+// Helper function to handle tokens
+async function handleAuthTokens(data: any): Promise<void> {
+  const access = data.access ?? data.key ?? data.token ?? data.access_token ?? null;
+  const refresh = data.refresh ?? data.refresh_token ?? null;
+
+  if (!access) throw new Error('No access token in response');
+
+  await SecureStore.setItemAsync('accessToken', access);
+  if (refresh) {
+    await SecureStore.setItemAsync('refreshToken', refresh);
+  }
+}
+
+
+// Function to log in a user
 export async function loginUser(username: string, password: string): Promise<void> {
-  //Send login request
   const res = await fetch(`${API_URL}${ENDPOINTS.LOGIN}`, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
   });
 
-  //Response handling
   const ct = res.headers.get('content-type') ?? '';
   const text = await res.text();
   if (!ct.includes('application/json')) {
@@ -21,20 +30,39 @@ export async function loginUser(username: string, password: string): Promise<voi
   }
   const data = JSON.parse(text);
 
-  //Http error handling
   if (!res.ok) {
-
     const msgs = Object.values(data).flat?.() ?? [];
     throw new Error(msgs.length ? msgs.join(' ') : 'Log in failed');
   }
 
-  //Extract tokens from response
-  const accessToken = data.access ?? data.key ?? data.token ?? data.access_token ?? null;
-  if (!accessToken) throw new Error('No access token in response');
+  await handleAuthTokens(data);
+}
 
-  //Store tokens securely
-  await SecureStore.setItemAsync('accessToken', accessToken);
-  const refreshToken = data.refresh ?? data.refresh_token ?? null;
-  if (refreshToken) await SecureStore.setItemAsync('refreshToken', refreshToken);
+// Function to register a new user
+export async function registerUser(
+  username: string, 
+  email: string, 
+  password1: string, 
+  password2: string
+): Promise<void> {
+  const res = await fetch(`${API_URL}${ENDPOINTS.REGISTER}`, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password1, password2 }),
+  });
+// Handle response
+  const ct = res.headers.get('content-type') ?? '';
+  const text = await res.text();
+  if (!ct.includes('application/json')) {
+    throw new Error(`Unexpected response from server: ${text}`);
+  }
+  const data = JSON.parse(text);
 
+  if (!res.ok) {
+    const msgs = Object.values(data).flat?.() ?? [];
+    throw new Error(msgs.length ? msgs.join(' ') : 'Registration failed');
+  }
+
+  // Handle tokens after successful registration
+  await handleAuthTokens(data);
 }

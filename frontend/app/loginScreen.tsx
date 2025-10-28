@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-// Importujemy funkcję logowania z serwisu
+// Import the login function
 import { loginUser } from '../services/authService';
 
 
@@ -36,7 +36,7 @@ export default function LoginScreen() {
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
-      <Text style={{ fontSize: 20, marginBottom: 12, textAlign: 'center' }}>Logowanie</Text>
+      <Text style={{ fontSize: 20, marginBottom: 12, textAlign: 'center' }}>Login</Text>
 
       <TextInput
         placeholder="Username"
@@ -59,7 +59,16 @@ export default function LoginScreen() {
       {loading ? (
         <ActivityIndicator size="large" style={{ marginTop: 12 }} />
       ) : (
-        <Button title="Log in" onPress={handleLogin} />
+        <>
+          <Button title="Log in" onPress={handleLogin} />
+          <Text style={{ marginTop: 20, textAlign: 'center' }}>
+            Don't have an account?
+          </Text>
+          <Button 
+            title="Register" 
+            onPress={() => router.push('./register')}
+          />
+        </>
       )}
     </View>
   );

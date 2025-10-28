@@ -14,10 +14,10 @@ export default function TabsLayout() {
       try {
         const token = await SecureStore.getItemAsync("accessToken");
         if (!token) {
-          router.replace("/loginScreen");
+          router.replace("/loginScreen"); 
         }
       } catch {
-        router.replace("/loginScreen");
+        router.replace("/loginScreen"); 
       } finally {
         setChecking(false);
       }
