@@ -66,3 +66,32 @@ export async function registerUser(
   // Handle tokens after successful registration
   await handleAuthTokens(data);
 }
+
+
+
+// Logout function
+export async function logoutUser(): Promise<void> {
+    const refreshToken = await SecureStore.getItemAsync('refreshToken');
+    
+    // Remove tokens from secure storage
+    await SecureStore.deleteItemAsync('accessToken');
+    if (refreshToken) {
+        await SecureStore.deleteItemAsync('refreshToken');
+    }
+
+    if (refreshToken) {
+        try {
+            // Inform the server about logout to invalidate the refresh token
+            await fetch(`${API_URL}${ENDPOINTS.LOGOUT}`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ refresh: refreshToken }),
+            });
+
+        } catch (error) {
+            console.error('Logout request failed (tokens already removed on client):', error);
+        }
+    }
+}

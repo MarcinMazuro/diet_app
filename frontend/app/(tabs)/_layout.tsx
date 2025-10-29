@@ -47,6 +47,10 @@ export default function TabsLayout() {
         name="test" 
         options={{ title: "Test Screen" }}
       />
+      <Tabs.Screen 
+        name="menu" 
+        options={{ title: "Menu Screen" }}
+      />
     </Tabs>
   );
 }
