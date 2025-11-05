@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-// Import the login function
 import { loginUser } from '../services/authService';
-
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { setAuthenticated } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -19,14 +19,12 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
-    
+
     try {
       await loginUser(username, password);
-      // Routing after successful log in 
+      setAuthenticated(true); // update auth state
       router.replace('/(tabs)');
-      
     } catch (err) {
-      // Errors and messages
       const msg = err instanceof Error ? err.message : 'Could not log in';
       Alert.alert('Log in error', msg);
     } finally {
@@ -35,8 +33,8 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
-      <Text style={{ fontSize: 20, marginBottom: 12, textAlign: 'center' }}>Login</Text>
+      <View style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
+        <Text style={{ fontSize: 20, marginBottom: 12, textAlign: 'center' }}>Login</Text>
 
       <TextInput
         placeholder="Username"
@@ -62,7 +60,7 @@ export default function LoginScreen() {
         <>
           <Button title="Log in" onPress={handleLogin} />
           <Text style={{ marginTop: 20, textAlign: 'center' }}>
-            Don't have an account?
+            Don’t have an account?
           </Text>
           <Button 
             title="Register" 
