@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import * as SecureStore from "expo-secure-store";
+import { getAccessToken } from "@/services/authService"; // ⬅️ ważne!
 
 type AuthContextType = {
     isAuthenticated: boolean;
@@ -14,17 +14,17 @@ const AuthContext = createContext<AuthContextType>({
     setAuthenticated: () => {},
     checkAuth: async () => {},
 });
-// AuthProvider component to wrap the app and provide auth state
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [isAuthenticated, setAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
-    // Function to check authentication status
+
+    // Checks whether the user has a valid token
     const checkAuth = async () => {
         try {
-            const token = await SecureStore.getItemAsync("accessToken");
+            const token = await getAccessToken();
             setAuthenticated(!!token);
-        } catch (err) {
-            console.error("Auth check failed:", err);
+        } catch {
             setAuthenticated(false);
         } finally {
             setLoading(false);
@@ -36,7 +36,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 // Provide the auth state and functions to children components
     return (
-        <AuthContext.Provider value={{ isAuthenticated, loading, setAuthenticated, checkAuth }}>
+        <AuthContext.Provider
+            value={{ isAuthenticated, loading, setAuthenticated, checkAuth }}
+        >
             {children}
         </AuthContext.Provider>
     );

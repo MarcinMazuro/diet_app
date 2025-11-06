@@ -30,11 +30,18 @@ export default function Menu() {
             }}
         >
 
+            <Button
+                title="Mój profil"
+                onPress={() => router.push("/menu/profileScreen")}
+                color="orange"
+            />
+            <View style={{marginTop: 20}}>
             <Button 
                 title="Wyloguj" 
                 onPress={handleLogout} 
                 color="red"
             />
+            </View>
         </View>
     );
 }

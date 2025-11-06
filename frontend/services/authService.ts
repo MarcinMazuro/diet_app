@@ -14,6 +14,38 @@ async function handleAuthTokens(data: any): Promise<void> {
   }
 }
 
+// Helper function to get access token (used in other services)
+export async function getAccessToken(): Promise<string | null> {
+    return await SecureStore.getItemAsync('accessToken');
+}
+
+
+// Function to refresh access token
+export async function refreshAccessToken(): Promise<string | null> {
+    const refresh = await SecureStore.getItemAsync("refreshToken");
+    if (!refresh) return null;
+
+    const res = await fetch(`${API_URL}/api/v1/auth/token/refresh/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh }),
+    });
+
+    if (!res.ok) {
+        await SecureStore.deleteItemAsync("accessToken");
+        await SecureStore.deleteItemAsync("refreshToken");
+        return null;
+    }
+
+    const data = await res.json();
+    const access = data.access ?? data.access_token;
+    if (access) {
+        await SecureStore.setItemAsync("accessToken", access);
+        return access;
+    }
+    return null;
+}
+
 
 // Function to log in a user
 export async function loginUser(username: string, password: string): Promise<void> {
