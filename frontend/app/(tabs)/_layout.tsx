@@ -1,55 +1,57 @@
-import React, { useEffect, useState } from 'react';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Tabs } from "expo-router";
-import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
-import { ActivityIndicator, View } from 'react-native';
+import React, { useEffect } from "react";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import Feather from '@expo/vector-icons/Feather';
+import { Tabs, useRouter } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function TabsLayout() {
-  const router = useRouter();
-  const [checking, setChecking] = useState(true);
+    const router = useRouter();
+    const { isAuthenticated, loading } = useAuth();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const token = await SecureStore.getItemAsync("accessToken");
-        if (!token) {
-          router.replace("/loginScreen"); 
+    useEffect(() => {
+        if (!loading && !isAuthenticated) {
+            // Navigate to log in screen if not authenticated
+            router.replace("/loginScreen");
         }
-      } catch {
-        router.replace("/loginScreen"); 
-      } finally {
-        setChecking(false);
-      }
-    })();
-  }, []);
+    }, [loading, isAuthenticated]);
 
-  if (checking) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
+    if (loading) {
+        // Wait while checking authentication
+        return (
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator size="large" />
+            </View>
+        );
+    }
 
   return (
     <Tabs screenOptions={{ tabBarActiveTintColor: "coral" }} >
       <Tabs.Screen 
         name="index" 
         options={{
-          title: "Home Screen", 
+          title: "Home Screen",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="food-apple" size={24} color={color} />
+            <MaterialCommunityIcons name="food-apple" size={size} color={color} />
           ),
         }}
       />
-      <Tabs.Screen 
+      <Tabs.Screen
         name="test" 
-        options={{ title: "Test Screen" }}
+        options={{
+            title: "Test Screen",
+
+
+        }}
       />
       <Tabs.Screen 
         name="menu" 
-        options={{ title: "Menu Screen" }}
+        options={{
+            title: "Menu Screen",
+            tabBarIcon: ({ color, size }) => (
+                <Feather name="menu" size={size} color={color} />
+            ),
+      }}
       />
     </Tabs>
   );

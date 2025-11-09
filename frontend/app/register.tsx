@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Text, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { registerUser } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { setAuthenticated } = useAuth(); // using the auth context
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
@@ -35,6 +37,7 @@ export default function RegisterScreen() {
         formData.password2
       );
       // Navigate to main app on success
+      setAuthenticated(true);
       router.replace('/(tabs)');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Registration failed';

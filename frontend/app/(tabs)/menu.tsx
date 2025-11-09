@@ -1,19 +1,21 @@
-import { Text, View, Button, Alert } from "react-native";
-import { useRouter } from 'expo-router'; 
-import { logoutUser } from '../../services/authService'; 
+import { View, Button, Alert } from "react-native";
+import { useRouter } from "expo-router";
+import { logoutUser } from "../../services/authService";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function Menu() {
-    const router = useRouter(); 
+    const router = useRouter();
+    const { setAuthenticated } = useAuth();
 
     const handleLogout = async () => {
         try {
             await logoutUser();
-
-            router.replace('/loginScreen'); 
+            setAuthenticated(false);
+            router.replace("/loginScreen");
         } catch (err) {
-
-            Alert.alert('Logout Error', 'Failed to complete logout process.');
-            router.replace('/');
+            Alert.alert("Logout Error", "Failed to complete logout process.");
+            setAuthenticated(false);
+            router.replace("/loginScreen");
         }
     };
 
@@ -27,14 +29,19 @@ export default function Menu() {
                 padding: 16
             }}
         >
-           
-            
-            {/* Przycisk Wyloguj */}
+
+            <Button
+                title="Mój profil"
+                onPress={() => router.push("/menu/profileScreen")}
+                color="orange"
+            />
+            <View style={{marginTop: 20}}>
             <Button 
                 title="Wyloguj" 
                 onPress={handleLogout} 
                 color="red"
             />
+            </View>
         </View>
     );
 }

@@ -7,4 +7,6 @@ export const ENDPOINTS = {
   TEST: '/api/test/string/',                        
   REGISTER: '/api/v1/auth/registration/',
   LOGOUT: '/api/v1/auth/logout/',
+  ME: '/api/profiles/me/',
+
 };
