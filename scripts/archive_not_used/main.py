@@ -26,7 +26,7 @@ def serialize_ingredient(obj):
 
 
 def select_recipes():
-    with open("./archive/full_format_recipes.json", "r") as file:
+    with open("full_format_recipes.json", "r") as file:
         recipes = json.load(file)
         recipes = pd.DataFrame(recipes)
         recipes = recipes.drop("date", axis=1)
@@ -41,7 +41,7 @@ def select_recipes():
 
         recipes.insert(4, "carbohydrates", (recipes["calories"] - 9 * recipes["fat"] - 4 * recipes["protein"]) / 4)
         
-        with open("./archive/filtered_recipes.json", "w") as outfile:
+        with open("filtered_recipes.json", "w") as outfile:
             json.dump(recipes.to_dict(orient="records"), outfile, indent=4)
 
         return recipes
@@ -60,7 +60,7 @@ def parse_ingredients(recipes):
             except Exception as e:
                 # Skip ingredients that cause parsing errors
                 continue
-    with open("./archive/parsed_ingredients.json", "w") as file:
+    with open("parsed_ingredients.json", "w") as file:
         json.dump(parsed_ingredients, file, indent=4)
 
 def analyze_ingredients(json_file_path):
@@ -88,7 +88,7 @@ def analyze_ingredients(json_file_path):
 def main():
    # recipes = select_recipes()
    # parse_ingredients(recipes)
-    analyze_ingredients("./archive/parsed_ingredients.json")
+    analyze_ingredients("parsed_ingredients.json")
 
 if __name__ == "__main__":
     main()

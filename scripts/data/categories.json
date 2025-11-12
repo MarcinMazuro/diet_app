@@ -1,0 +1,52 @@
+{
+  "cuisine": [
+    "american",
+    "asian",
+    "british",
+    "caribbean",
+    "chinese",
+    "egyptian",
+    "french",
+    "german",
+    "greek",
+    "indian",
+    "indonesian",
+    "italian",
+    "jamaican",
+    "japanese",
+    "korean",
+    "mediterranean",
+    "mexican",
+    "middle eastern",
+    "persian",
+    "scottish",
+    "spanish",
+    "thai",
+    "turkish"
+  ],
+  "dish": [
+    "afternoon tea",
+    "breakfast",
+    "brunch",
+    "buffet",
+    "dinner",
+    "lunch",
+    "main course",
+    "picnic",
+    "starter",
+    "supper"
+  ],
+  "meal": [
+    "cocktails",
+    "condiment",
+    "dessert",
+    "drink",
+    "pasta",
+    "side dish",
+    "snack",
+    "treat"
+  ],
+  "culture": [
+    "jewish"
+  ]
+}
