@@ -106,7 +106,6 @@ class BBCGoodFoodRecipeScraper:
             if json_ld:
                 try:
                     ld_data = json.loads(json_ld.string)
-                    # Handle list or single object
                     if isinstance(ld_data, list):
                         for item in ld_data:
                             if item.get('@type') == 'Recipe':
@@ -188,7 +187,6 @@ class BBCGoodFoodRecipeScraper:
         # Nutrition
         if 'nutrition' in data:
             nutrition = data.get('nutrition', {}) or {}
-            # keep top-level calories for backward compatibility
             recipe['calories'] = nutrition.get('calories', '')
 
             recipe['protein'] = nutrition.get('proteinContent', ''),
@@ -196,8 +194,8 @@ class BBCGoodFoodRecipeScraper:
             recipe['saturated_fat']= nutrition.get('saturatedFatContent', ''),
             recipe['fiber']= nutrition.get('fiberContent', ''),
             recipe['sugar']= nutrition.get('sugarContent', ''),
+            recipe['carbohydrate'] = nutrition.get('carbohydrateContent', ''),
             recipe['sodium']=  nutrition.get('sodiumContent', '')
-
         # Keywords/Categories
         if 'keywords' in data:
             keywords = data['keywords']
@@ -343,8 +341,7 @@ class BBCGoodFoodRecipeScraper:
 
 def main():
     """Main function to run the scraper"""
-    # Test with first 2 pages (about 30-40 recipes)
-    scraper = BBCGoodFoodRecipeScraper(start_page=11, end_page=30, delay=0.5)
+    scraper = BBCGoodFoodRecipeScraper(start_page=1, end_page=50, delay=0.5)
 
     # Scrape all recipes
     recipes = scraper.scrape_all()

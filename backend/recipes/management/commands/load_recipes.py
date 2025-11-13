@@ -91,6 +91,7 @@ class Command(BaseCommand):
                 defaults={
                     'source': recipe_data.get('url'),
                     'description': recipe_data.get('description'),
+                    'ingredients': recipe_data.get('ingredients', []),
                     'directions': recipe_data.get('instructions', []),
                     'servings': recipe_data.get('servings'),
                     'preparation_time': recipe_data.get('total_minutes'),
@@ -98,7 +99,8 @@ class Command(BaseCommand):
                     'calories': recipe_data.get('calories'),
                     'fat': recipe_data.get('fat'),
                     'saturated_fat': recipe_data.get('saturated_fat'),
-                    'carbohydrates': recipe_data.get('sugar'),
+                    'carbohydrate': recipe_data.get('carbohydrate'),
+                    'sugar': recipe_data.get('sugar'),
                     'protein': recipe_data.get('protein'),
                     'sodium': recipe_data.get('sodium'),
                     'image_url': recipe_data.get('image_url')

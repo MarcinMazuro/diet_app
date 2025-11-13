@@ -1,5 +1,6 @@
 {
   "cuisine": [
+    "african",
     "american",
     "asian",
     "british",
@@ -15,12 +16,16 @@
     "jamaican",
     "japanese",
     "korean",
+    "malaysian",
     "mediterranean",
     "mexican",
     "middle eastern",
     "persian",
+    "polish",
     "scottish",
     "spanish",
+    "sri lankan",
+    "swedish",
     "thai",
     "turkish"
   ],
@@ -37,6 +42,7 @@
     "supper"
   ],
   "meal": [
+    "canapes",
     "cocktails",
     "condiment",
     "dessert",

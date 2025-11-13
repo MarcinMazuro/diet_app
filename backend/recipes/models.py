@@ -17,6 +17,7 @@ class Recipe(models.Model):
     name = models.CharField(max_length=255)
     source = models.URLField(blank=True, null=True)
     description = models.TextField(blank=True)
+    ingredients = models.JSONField(default=list)  # lista składników
     directions = models.JSONField(default=list)  # lista kroków
     servings = models.IntegerField(null=True, blank=True)
     preparation_time = models.IntegerField(null=True, blank=True)  # w minutach
@@ -26,7 +27,8 @@ class Recipe(models.Model):
     calories = models.FloatField(null=True, blank=True)
     fat = models.FloatField(null=True, blank=True)
     saturated_fat = models.FloatField(null=True, blank=True)
-    carbohydrates = models.FloatField(null=True, blank=True)
+    carbohydrate = models.FloatField(null=True, blank=True)
+    sugar = models.FloatField(null=True, blank=True)
     protein = models.FloatField(null=True, blank=True)
     sodium = models.FloatField(null=True, blank=True)
 
