@@ -18,5 +18,6 @@ urlpatterns = [
     path('api/v1/', include('accounts.urls')),
     
     path('api/test/', include('test_endpoints.urls')),
-    path('api/profiles/', include('profiles.urls'))
+    path('api/profiles/', include('profiles.urls')),
+    path('api/recipes/', include('recipes.urls')),
 ]

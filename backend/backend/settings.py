@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     # Our apps
     'accounts',
     'profiles',
-    
+    'recipes',
+
     # Third party apps
     'rest_framework',
     'rest_framework.authtoken',
