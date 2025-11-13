@@ -341,7 +341,7 @@ class BBCGoodFoodRecipeScraper:
 
 def main():
     """Main function to run the scraper"""
-    scraper = BBCGoodFoodRecipeScraper(start_page=1, end_page=50, delay=0.5)
+    scraper = BBCGoodFoodRecipeScraper(start_page=51, end_page=100, delay=0.5)
 
     # Scrape all recipes
     recipes = scraper.scrape_all()

@@ -17,12 +17,11 @@ class Recipe(models.Model):
     name = models.CharField(max_length=255)
     source = models.URLField(blank=True, null=True)
     description = models.TextField(blank=True)
-    ingredients = models.JSONField(default=list)  # lista składników
-    directions = models.JSONField(default=list)  # lista kroków
+    ingredients = models.JSONField(default=list)
+    directions = models.JSONField(default=list)
     servings = models.IntegerField(null=True, blank=True)
-    preparation_time = models.IntegerField(null=True, blank=True)  # w minutach
+    preparation_time = models.IntegerField(null=True, blank=True)
 
-    # Wartości odżywcze
     fiber = models.FloatField(null=True, blank=True)
     calories = models.FloatField(null=True, blank=True)
     fat = models.FloatField(null=True, blank=True)

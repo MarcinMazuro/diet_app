@@ -1,15 +1,20 @@
 {
   "cuisine": [
+    "afghan",
     "african",
     "american",
     "asian",
+    "austrian",
+    "brazilian",
     "british",
     "caribbean",
     "chinese",
+    "eastern european",
     "egyptian",
     "french",
     "german",
     "greek",
+    "hungarian",
     "indian",
     "indonesian",
     "italian",
@@ -20,14 +25,20 @@
     "mediterranean",
     "mexican",
     "middle eastern",
+    "moroccan",
+    "nigerian",
     "persian",
     "polish",
     "scottish",
     "spanish",
     "sri lankan",
     "swedish",
+    "swiss",
+    "taiwanese",
     "thai",
-    "turkish"
+    "turkish",
+    "ukrainian",
+    "vietnamese"
   ],
   "dish": [
     "afternoon tea",
@@ -35,6 +46,7 @@
     "brunch",
     "buffet",
     "dinner",
+    "fish course",
     "lunch",
     "main course",
     "picnic",
@@ -50,6 +62,7 @@
     "pasta",
     "side dish",
     "snack",
+    "soup",
     "treat"
   ],
   "culture": [
