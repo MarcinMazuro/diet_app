@@ -121,3 +121,4 @@ class NutritionalCalculationsSerializer(serializers.Serializer):
     basic_data = serializers.DictField()
     calculations = serializers.DictField()
     saved_to_profile = serializers.BooleanField()
+    

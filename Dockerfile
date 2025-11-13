@@ -50,4 +50,4 @@ USER appuser
 
 EXPOSE 8000
 # Run the application.
-CMD python backend/manage.py migrate && python backend/manage.py runserver 0.0.0.0:8000
+CMD python backend/manage.py makemigrations && python backend/manage.py migrate && python backend/manage.py load_recipes && python backend/manage.py runserver 0.0.0.0:8000
