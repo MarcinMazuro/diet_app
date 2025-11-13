@@ -11,13 +11,13 @@ class Command(BaseCommand):
         parser.add_argument(
             '--recipes',
             type=str,
-            default='../scripts/data/bbcgoodfood_recipes_clean.json',
+            default='../data_preparation/data/bbcgoodfood_recipes_clean.json',
             help='Path to recipes JSON file (relative to backend dir)'
         )
         parser.add_argument(
             '--categories',
             type=str,
-            default='../scripts/data/categories.json',
+            default='../data_preparation/data/categories.json',
             help='Path to categories JSON file (relative to backend dir)'
         )
 
