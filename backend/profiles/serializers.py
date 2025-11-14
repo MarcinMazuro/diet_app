@@ -1,17 +1,22 @@
 from rest_framework import serializers
 from .models import Profile
+from datetime import date
 
 class ProfileSerializer(serializers.ModelSerializer):
-    """Serializer for profile owner"""
+    """Serializer for the profile owner."""
     username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
     date_joined = serializers.DateTimeField(source='user.date_joined', read_only=True)
+
+    # Display fields for choices (read-only)
     gender_display = serializers.CharField(source='get_gender_display', read_only=True)
     nutritional_goal_display = serializers.CharField(source='get_nutritional_goal_display', read_only=True)
     physical_activity_display = serializers.CharField(source='get_physical_activity_display', read_only=True)
-
+    
+    # Calculated fields
+    age = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -20,29 +25,166 @@ class ProfileSerializer(serializers.ModelSerializer):
             'gender', 'gender_display',
             'nutritional_goal', 'nutritional_goal_display',
             'physical_activity', 'physical_activity_display',
-            'weight', 'height',
+            'weight', 'height', 'date_of_birth', 'age',
+            'custom_protein_percentage', 'custom_carb_percentage', 'custom_fat_percentage',
+            'calculations_last_updated',
             'updated_at', 'date_joined'
         ]
         read_only_fields = [
-            'username', 'email', 'updated_at', 'date_joined',
-            'gender_display', 'nutritional_goal_display', 'physical_activity_display'
+            'username', 'email', 'date_joined', 'age',
+            'gender_display', 'nutritional_goal_display', 
+            'physical_activity_display',
+            'calculations_last_updated', 'updated_at'
         ]
 
+    def get_age(self, obj):
+        """Return calculated age"""
+        return obj.calculate_age()
+
+    def validate_date_of_birth(self, value):
+        """Validate that date of birth is reasonable"""
+        if value:
+            today = date.today()
+            age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+            
+            if age < 13:
+                raise serializers.ValidationError("User must be at least 13 years old.")
+            if age > 120:
+                raise serializers.ValidationError("Invalid date of birth.")
+            if value > today:
+                raise serializers.ValidationError("Date of birth cannot be in the future.")
+        
+        return value
+
+    def validate_weight(self, value):
+        """Validate weight is within reasonable range"""
+        if value is not None:
+            if value < 20:
+                raise serializers.ValidationError("Weight must be at least 20 kg.")
+            if value > 500:
+                raise serializers.ValidationError("Weight must be at most 500 kg.")
+        return value
+
+    def validate_height(self, value):
+        """Validate height is within reasonable range"""
+        if value is not None:
+            if value < 50:
+                raise serializers.ValidationError("Height must be at least 50 cm.")
+            if value > 300:
+                raise serializers.ValidationError("Height must be at most 300 cm.")
+        return value
+
+    def validate(self, data):
+        """Validate that custom macro percentages sum to 1.0 if all are provided"""
+        protein_pct = data.get('custom_protein_percentage')
+        carb_pct = data.get('custom_carb_percentage')
+        fat_pct = data.get('custom_fat_percentage')
+        
+        # Check if any custom percentage is provided
+        custom_provided = [protein_pct, carb_pct, fat_pct]
+        custom_count = sum(1 for x in custom_provided if x is not None)
+        
+        # If some but not all are provided, raise error
+        if 0 < custom_count < 3:
+            raise serializers.ValidationError(
+                "If you specify custom macro percentages, you must provide all three (protein, carbs, fat)."
+            )
+        
+        # If all are provided, validate they sum to approximately 1.0
+        if custom_count == 3:
+            total = float(protein_pct) + float(carb_pct) + float(fat_pct)
+            if abs(total - 1.0) > 0.05:  # Allow 5% tolerance
+                raise serializers.ValidationError(
+                    f"Custom macro percentages must sum to 1.0 (100%). Current sum: {total:.2f}"
+                )
+        
+        return data
 
     def update(self, instance, validated_data):
+        """Handle updating the user and profile instances WITHOUT automatic calculation."""
         user_data = validated_data.pop('user', {})
-        first_name = user_data.get('first_name')
-        last_name = user_data.get('last_name')
-
-        # Update Profile instance
+        
+        # Update the Profile instance (no automatic calculations)
         instance = super().update(instance, validated_data)
-
-        # Update User instance
-        user = instance.user
-        if first_name is not None:
-            user.first_name = first_name
-        if last_name is not None:
-            user.last_name = last_name
-        user.save()
+        
+        # Update the related User instance
+        if user_data:
+            user = instance.user
+            user.first_name = user_data.get('first_name', user.first_name)
+            user.last_name = user_data.get('last_name', user.last_name)
+            user.save()
 
         return instance
+
+
+class CalculationRequestSerializer(serializers.Serializer):
+    """Serializer for calculation request with optional calorie adjustment"""
+    calorie_adjustment = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        min_value=-1000,
+        max_value=1000,
+        help_text="Optional calorie adjustment (-1000 to +1000 kcal). If not provided, uses default based on goal."
+    )
+    custom_protein_percentage = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=4,
+        decimal_places=2,
+        min_value=0,
+        max_value=1,
+        help_text="Custom protein percentage (0.0-1.0). Must provide all three macros if using custom percentages."
+    )
+    custom_carb_percentage = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=4,
+        decimal_places=2,
+        min_value=0,
+        max_value=1,
+        help_text="Custom carbohydrate percentage (0.0-1.0). Must provide all three macros if using custom percentages."
+    )
+    custom_fat_percentage = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=4,
+        decimal_places=2,
+        min_value=0,
+        max_value=1,
+        help_text="Custom fat percentage (0.0-1.0). Must provide all three macros if using custom percentages."
+    )
+
+    def validate(self, data):
+        """Validate that custom macro percentages sum to 1.0 if provided"""
+        protein_pct = data.get('custom_protein_percentage')
+        carb_pct = data.get('custom_carb_percentage')
+        fat_pct = data.get('custom_fat_percentage')
+        
+        custom_provided = [protein_pct, carb_pct, fat_pct]
+        custom_count = sum(1 for x in custom_provided if x is not None)
+        
+        if 0 < custom_count < 3:
+            raise serializers.ValidationError(
+                "If you specify custom macro percentages, you must provide all three (protein, carbs, fat)."
+            )
+        
+        if custom_count == 3:
+            total = float(protein_pct) + float(carb_pct) + float(fat_pct)
+            if abs(total - 1.0) > 0.05:
+                raise serializers.ValidationError(
+                    f"Custom macro percentages must sum to 1.0 (100%). Current sum: {total:.2f}"
+                )
+        
+        return data
+
+
+class NutritionalCalculationsSerializer(serializers.Serializer):
+    """Serializer for nutritional calculations response"""
+    method = serializers.CharField()
+    method_reason = serializers.CharField()
+    calorie_adjustment_used = serializers.IntegerField()
+    basic_data = serializers.DictField()
+    calculations = serializers.DictField()
+    saved_to_profile = serializers.BooleanField()
+    last_updated = serializers.DateTimeField()
+    
