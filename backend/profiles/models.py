@@ -385,8 +385,7 @@ class Profile(models.Model):
     def calculate_macros(self):
         """
         Calculate recommended daily macros (protein, carbs, fat in grams)
-        Protein is calculated per kg of body weight based on activity level
-        Carbs and fats are calculated as percentages of remaining calories
+        Uses custom percentages if provided, otherwise calculates based on activity level
         """
         calories = self.calculate_daily_calories()
         if not calories or not self.weight:
@@ -394,75 +393,104 @@ class Profile(models.Model):
         
         weight_kg = float(self.weight)
         
-        # PROTEIN: Calculate based on activity level (g/kg body weight)
-        if self.nutritional_goal == self.NutritionalGoal.LOSE_WEIGHT:
-            # Higher protein during weight loss to preserve muscle
-            protein_per_kg = {
-                self.PhysicalActivity.SEDENTARY: 1.6,      # 1.6 g/kg
-                self.PhysicalActivity.LOW: 1.8,            # 1.8 g/kg
-                self.PhysicalActivity.MODERATE: 2.0,       # 2.0 g/kg
-                self.PhysicalActivity.HIGH: 2.2,           # 2.2 g/kg
-                self.PhysicalActivity.VERY_HIGH: 2.4,      # 2.4 g/kg
-            }
-        elif self.nutritional_goal == self.NutritionalGoal.GAIN_WEIGHT:
-            # Moderate to high protein for muscle building
-            protein_per_kg = {
-                self.PhysicalActivity.SEDENTARY: 1.4,      # 1.4 g/kg
-                self.PhysicalActivity.LOW: 1.6,            # 1.6 g/kg
-                self.PhysicalActivity.MODERATE: 1.8,       # 1.8 g/kg
-                self.PhysicalActivity.HIGH: 2.0,           # 2.0 g/kg
-                self.PhysicalActivity.VERY_HIGH: 2.2,      # 2.2 g/kg
-            }
-        else:  # MAINTAIN_WEIGHT
-            # Standard protein intake
-            protein_per_kg = {
-                self.PhysicalActivity.SEDENTARY: 1.2,      # 1.2 g/kg
-                self.PhysicalActivity.LOW: 1.4,            # 1.4 g/kg
-                self.PhysicalActivity.MODERATE: 1.6,       # 1.6 g/kg
-                self.PhysicalActivity.HIGH: 1.8,           # 1.8 g/kg
-                self.PhysicalActivity.VERY_HIGH: 2.0,      # 2.0 g/kg
-            }
+        # Check if user has specified custom macro percentages
+        has_custom_macros = all([
+            self.custom_protein_percentage is not None,
+            self.custom_carb_percentage is not None,
+            self.custom_fat_percentage is not None
+        ])
         
-        protein_grams = weight_kg * protein_per_kg.get(self.physical_activity, 1.6)
-        protein_calories = protein_grams * 4  # 4 kcal per gram of protein
-        
-        # Remaining calories after protein
-        remaining_calories = calories - protein_calories
-        
-        # FAT and CARBS: Calculate percentages based on goal and activity
-        if self.nutritional_goal == self.NutritionalGoal.LOSE_WEIGHT:
-            # Lower carbs, moderate fat for weight loss
-            if self.physical_activity in [self.PhysicalActivity.HIGH, self.PhysicalActivity.VERY_HIGH]:
-                # More active = need more carbs for energy
-                fat_percentage = 0.25      # 25% fat
-                carb_percentage = 0.75     # 75% carbs
-            else:
-                fat_percentage = 0.35      # 35% fat
-                carb_percentage = 0.65     # 65% carbs
-                
-        elif self.nutritional_goal == self.NutritionalGoal.GAIN_WEIGHT:
-            # Higher carbs for muscle building and energy
-            if self.physical_activity in [self.PhysicalActivity.HIGH, self.PhysicalActivity.VERY_HIGH]:
-                fat_percentage = 0.20      # 20% fat
-                carb_percentage = 0.80     # 80% carbs
-            else:
-                fat_percentage = 0.25      # 25% fat
-                carb_percentage = 0.75     # 75% carbs
-                
-        else:  # MAINTAIN_WEIGHT
-            # Balanced distribution
-            if self.physical_activity in [self.PhysicalActivity.HIGH, self.PhysicalActivity.VERY_HIGH]:
-                fat_percentage = 0.25      # 25% fat
-                carb_percentage = 0.75     # 75% carbs
-            else:
-                fat_percentage = 0.30      # 30% fat
-                carb_percentage = 0.70     # 70% carbs
-        
-        fat_calories = remaining_calories * fat_percentage
-        carb_calories = remaining_calories * carb_percentage
-        
-        fat_grams = fat_calories / 9      # 9 kcal per gram of fat
-        carb_grams = carb_calories / 4    # 4 kcal per gram of carbs
+        if has_custom_macros:
+            # Use custom percentages
+            protein_percentage = float(self.custom_protein_percentage)
+            carb_percentage = float(self.custom_carb_percentage)
+            fat_percentage = float(self.custom_fat_percentage)
+            
+            # Validate that they sum to 1.0 (with small tolerance for floating point errors)
+            total = protein_percentage + carb_percentage + fat_percentage
+            if abs(total - 1.0) > 0.01:  # Allow 1% tolerance
+                # If they don't sum to 1, normalize them
+                protein_percentage = protein_percentage / total
+                carb_percentage = carb_percentage / total
+                fat_percentage = fat_percentage / total
+            
+            # Calculate grams from percentages
+            protein_calories = calories * protein_percentage
+            carb_calories = calories * carb_percentage
+            fat_calories = calories * fat_percentage
+            
+            protein_grams = protein_calories / 4
+            carb_grams = carb_calories / 4
+            fat_grams = fat_calories / 9
+            
+        else:
+            # AUTOMATIC CALCULATION based on activity level
+            
+            # PROTEIN: Calculate based on activity level (g/kg body weight)
+            if self.nutritional_goal == self.NutritionalGoal.LOSE_WEIGHT:
+                protein_per_kg = {
+                    self.PhysicalActivity.SEDENTARY: 1.6,
+                    self.PhysicalActivity.LOW: 1.8,
+                    self.PhysicalActivity.MODERATE: 2.0,
+                    self.PhysicalActivity.HIGH: 2.2,
+                    self.PhysicalActivity.VERY_HIGH: 2.4,
+                }
+            elif self.nutritional_goal == self.NutritionalGoal.GAIN_WEIGHT:
+                protein_per_kg = {
+                    self.PhysicalActivity.SEDENTARY: 1.4,
+                    self.PhysicalActivity.LOW: 1.6,
+                    self.PhysicalActivity.MODERATE: 1.8,
+                    self.PhysicalActivity.HIGH: 2.0,
+                    self.PhysicalActivity.VERY_HIGH: 2.2,
+                }
+            else:  # MAINTAIN_WEIGHT
+                protein_per_kg = {
+                    self.PhysicalActivity.SEDENTARY: 1.2,
+                    self.PhysicalActivity.LOW: 1.4,
+                    self.PhysicalActivity.MODERATE: 1.6,
+                    self.PhysicalActivity.HIGH: 1.8,
+                    self.PhysicalActivity.VERY_HIGH: 2.0,
+                }
+            
+            protein_grams = weight_kg * protein_per_kg.get(self.physical_activity, 1.6)
+            protein_calories = protein_grams * 4
+            
+            # Remaining calories after protein
+            remaining_calories = calories - protein_calories
+            
+            # FAT and CARBS: Calculate percentages based on goal and activity
+            if self.nutritional_goal == self.NutritionalGoal.LOSE_WEIGHT:
+                if self.physical_activity in [self.PhysicalActivity.HIGH, self.PhysicalActivity.VERY_HIGH]:
+                    fat_pct = 0.25
+                    carb_pct = 0.75
+                else:
+                    fat_pct = 0.35
+                    carb_pct = 0.65
+            elif self.nutritional_goal == self.NutritionalGoal.GAIN_WEIGHT:
+                if self.physical_activity in [self.PhysicalActivity.HIGH, self.PhysicalActivity.VERY_HIGH]:
+                    fat_pct = 0.20
+                    carb_pct = 0.80
+                else:
+                    fat_pct = 0.25
+                    carb_pct = 0.75
+            else:  # MAINTAIN_WEIGHT
+                if self.physical_activity in [self.PhysicalActivity.HIGH, self.PhysicalActivity.VERY_HIGH]:
+                    fat_pct = 0.25
+                    carb_pct = 0.75
+                else:
+                    fat_pct = 0.30
+                    carb_pct = 0.70
+            
+            fat_calories = remaining_calories * fat_pct
+            carb_calories = remaining_calories * carb_pct
+            
+            fat_grams = fat_calories / 9
+            carb_grams = carb_calories / 4
+            
+            # Calculate actual percentages for display
+            protein_percentage = protein_calories / calories
+            carb_percentage = carb_calories / calories
+            fat_percentage = fat_calories / calories
         
         return {
             'protein': round(protein_grams, 1),
@@ -472,9 +500,10 @@ class Profile(models.Model):
             'calories_from_protein': round(protein_calories, 0),
             'calories_from_carbs': round(carb_calories, 0),
             'calories_from_fat': round(fat_calories, 0),
-            'protein_percentage': round((protein_calories / calories) * 100, 1),
-            'carb_percentage': round((carb_calories / calories) * 100, 1),
-            'fat_percentage': round((fat_calories / calories) * 100, 1)
+            'protein_percentage': round(protein_percentage * 100, 1),
+            'carb_percentage': round(carb_percentage * 100, 1),
+            'fat_percentage': round(fat_percentage * 100, 1),
+            'using_custom_percentages': has_custom_macros
         }
 
     def perform_calculations(self):

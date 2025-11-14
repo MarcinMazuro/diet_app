@@ -26,6 +26,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             'nutritional_goal', 'nutritional_goal_display',
             'physical_activity', 'physical_activity_display',
             'weight', 'height', 'date_of_birth', 'age',
+            'custom_protein_percentage', 'custom_carb_percentage', 'custom_fat_percentage',
             'calculations_last_updated',
             'updated_at', 'date_joined'
         ]
@@ -73,6 +74,32 @@ class ProfileSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Height must be at most 300 cm.")
         return value
 
+    def validate(self, data):
+        """Validate that custom macro percentages sum to 1.0 if all are provided"""
+        protein_pct = data.get('custom_protein_percentage')
+        carb_pct = data.get('custom_carb_percentage')
+        fat_pct = data.get('custom_fat_percentage')
+        
+        # Check if any custom percentage is provided
+        custom_provided = [protein_pct, carb_pct, fat_pct]
+        custom_count = sum(1 for x in custom_provided if x is not None)
+        
+        # If some but not all are provided, raise error
+        if 0 < custom_count < 3:
+            raise serializers.ValidationError(
+                "If you specify custom macro percentages, you must provide all three (protein, carbs, fat)."
+            )
+        
+        # If all are provided, validate they sum to approximately 1.0
+        if custom_count == 3:
+            total = float(protein_pct) + float(carb_pct) + float(fat_pct)
+            if abs(total - 1.0) > 0.05:  # Allow 5% tolerance
+                raise serializers.ValidationError(
+                    f"Custom macro percentages must sum to 1.0 (100%). Current sum: {total:.2f}"
+                )
+        
+        return data
+
     def update(self, instance, validated_data):
         """Handle updating the user and profile instances WITHOUT automatic calculation."""
         user_data = validated_data.pop('user', {})
@@ -99,6 +126,56 @@ class CalculationRequestSerializer(serializers.Serializer):
         max_value=1000,
         help_text="Optional calorie adjustment (-1000 to +1000 kcal). If not provided, uses default based on goal."
     )
+    custom_protein_percentage = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=4,
+        decimal_places=2,
+        min_value=0,
+        max_value=1,
+        help_text="Custom protein percentage (0.0-1.0). Must provide all three macros if using custom percentages."
+    )
+    custom_carb_percentage = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=4,
+        decimal_places=2,
+        min_value=0,
+        max_value=1,
+        help_text="Custom carbohydrate percentage (0.0-1.0). Must provide all three macros if using custom percentages."
+    )
+    custom_fat_percentage = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=4,
+        decimal_places=2,
+        min_value=0,
+        max_value=1,
+        help_text="Custom fat percentage (0.0-1.0). Must provide all three macros if using custom percentages."
+    )
+
+    def validate(self, data):
+        """Validate that custom macro percentages sum to 1.0 if provided"""
+        protein_pct = data.get('custom_protein_percentage')
+        carb_pct = data.get('custom_carb_percentage')
+        fat_pct = data.get('custom_fat_percentage')
+        
+        custom_provided = [protein_pct, carb_pct, fat_pct]
+        custom_count = sum(1 for x in custom_provided if x is not None)
+        
+        if 0 < custom_count < 3:
+            raise serializers.ValidationError(
+                "If you specify custom macro percentages, you must provide all three (protein, carbs, fat)."
+            )
+        
+        if custom_count == 3:
+            total = float(protein_pct) + float(carb_pct) + float(fat_pct)
+            if abs(total - 1.0) > 0.05:
+                raise serializers.ValidationError(
+                    f"Custom macro percentages must sum to 1.0 (100%). Current sum: {total:.2f}"
+                )
+        
+        return data
 
 
 class NutritionalCalculationsSerializer(serializers.Serializer):
