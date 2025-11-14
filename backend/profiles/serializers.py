@@ -14,7 +14,6 @@ class ProfileSerializer(serializers.ModelSerializer):
     gender_display = serializers.CharField(source='get_gender_display', read_only=True)
     nutritional_goal_display = serializers.CharField(source='get_nutritional_goal_display', read_only=True)
     physical_activity_display = serializers.CharField(source='get_physical_activity_display', read_only=True)
-    calculation_method_display = serializers.CharField(source='get_calculation_method_display', read_only=True)
     
     # Calculated fields
     age = serializers.SerializerMethodField()
@@ -26,20 +25,14 @@ class ProfileSerializer(serializers.ModelSerializer):
             'gender', 'gender_display',
             'nutritional_goal', 'nutritional_goal_display',
             'physical_activity', 'physical_activity_display',
-            'calculation_method', 'calculation_method_display',
-            'calorie_adjustment',
             'weight', 'height', 'date_of_birth', 'age',
-            'bmi', 'ppm', 'cpm', 'daily_calories',
-            'daily_protein', 'daily_carbohydrates', 'daily_fat',
             'calculations_last_updated',
             'updated_at', 'date_joined'
         ]
         read_only_fields = [
             'username', 'email', 'date_joined', 'age',
             'gender_display', 'nutritional_goal_display', 
-            'physical_activity_display', 'calculation_method_display',
-            'bmi', 'ppm', 'cpm', 'daily_calories',
-            'daily_protein', 'daily_carbohydrates', 'daily_fat',
+            'physical_activity_display',
             'calculations_last_updated', 'updated_at'
         ]
 
@@ -80,25 +73,11 @@ class ProfileSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Height must be at most 300 cm.")
         return value
 
-    def validate_calorie_adjustment(self, value):
-        """Validate calorie adjustment is within safe range"""
-        if value < -1000:
-            raise serializers.ValidationError("Calorie adjustment cannot be less than -1000 kcal.")
-        if value > 1000:
-            raise serializers.ValidationError("Calorie adjustment cannot be more than +1000 kcal.")
-        return value
-
     def update(self, instance, validated_data):
-        """Handle updating the user and profile instances."""
+        """Handle updating the user and profile instances WITHOUT automatic calculation."""
         user_data = validated_data.pop('user', {})
         
-        # Track if key fields changed (requires recalculation)
-        recalculation_fields = ['weight', 'height', 'date_of_birth', 'gender', 
-                                'physical_activity', 'nutritional_goal', 
-                                'calculation_method', 'calorie_adjustment']
-        needs_recalculation = any(field in validated_data for field in recalculation_fields)
-        
-        # Update the Profile instance
+        # Update the Profile instance (no automatic calculations)
         instance = super().update(instance, validated_data)
         
         # Update the related User instance
@@ -107,18 +86,28 @@ class ProfileSerializer(serializers.ModelSerializer):
             user.first_name = user_data.get('first_name', user.first_name)
             user.last_name = user_data.get('last_name', user.last_name)
             user.save()
-        
-        # Recalculate nutritional values if needed
-        if needs_recalculation:
-            instance.perform_calculations()
 
         return instance
+
+
+class CalculationRequestSerializer(serializers.Serializer):
+    """Serializer for calculation request with optional calorie adjustment"""
+    calorie_adjustment = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        min_value=-1000,
+        max_value=1000,
+        help_text="Optional calorie adjustment (-1000 to +1000 kcal). If not provided, uses default based on goal."
+    )
 
 
 class NutritionalCalculationsSerializer(serializers.Serializer):
     """Serializer for nutritional calculations response"""
     method = serializers.CharField()
+    method_reason = serializers.CharField()
+    calorie_adjustment_used = serializers.IntegerField()
     basic_data = serializers.DictField()
     calculations = serializers.DictField()
     saved_to_profile = serializers.BooleanField()
+    last_updated = serializers.DateTimeField()
     

@@ -103,7 +103,9 @@ class Profile(models.Model):
         help_text="Method used for calculating daily calorie needs"
     )
     calorie_adjustment = models.IntegerField(
-        default=0,
+        null=True, 
+        blank=True,
+        default=None,
         validators=[MinValueValidator(-1000), MaxValueValidator(1000)],
         help_text="Manual calorie adjustment (-1000 to +1000 kcal)"
     )
@@ -157,6 +159,58 @@ class Profile(models.Model):
         null=True,
         blank=True,
         help_text="Recommended daily fat in grams"
+    )
+    protein_per_kg = models.DecimalField(
+    max_digits=4,
+    decimal_places=2,
+    null=True,
+    blank=True,
+    help_text="Protein intake per kg of body weight"
+    )
+    protein_percentage = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        help_text="Percentage of calories from protein"
+    )
+    carb_percentage = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        help_text="Percentage of calories from carbohydrates"
+    )
+    fat_percentage = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        help_text="Percentage of calories from fat"
+    )
+    custom_protein_percentage = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(0.7)],
+        help_text="Custom protein percentage (0.0 to 1.0). Leave empty for automatic calculation."
+    )
+    custom_carb_percentage = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(0.8)],
+        help_text="Custom carbohydrate percentage (0.0 to 1.0). Leave empty for automatic calculation."
+    )
+    custom_fat_percentage = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(0.7)],
+        help_text="Custom fat percentage (0.0 to 1.0). Leave empty for automatic calculation."
     )
     
     # Timestamps
@@ -265,28 +319,65 @@ class Profile(models.Model):
         
         return round(cpm, 2)
 
+    def get_recommended_calculation_method(self):
+        """
+        Auto-select calculation method based on user characteristics
+        Based on the image criteria:
+        - Harris-Benedict: for normal BMI, not overweight, people who exercise regularly
+        - Mifflin: for overweight people
+        """
+        bmi = self.calculate_bmi()
+        if not bmi:
+            return self.CalculationMethod.MIFFLIN  # default
+        
+        # BMI categories:
+        # Underweight: < 18.5
+        # Normal: 18.5 - 24.9
+        # Overweight: 25 - 29.9
+        # Obese: >= 30
+        
+        if bmi >= 25:  # Overweight or obese
+            return self.CalculationMethod.MIFFLIN
+        else:  # Normal or underweight
+            return self.CalculationMethod.HARRIS_BENEDICT
+
     def calculate_daily_calories(self):
         """
         Calculate recommended daily calories based on nutritional goal
-        Includes user's manual calorie adjustment
+        Uses user's calorie_adjustment if explicitly set, otherwise uses defaults
+        - None: uses default adjustment based on goal
+        - 0: explicitly no adjustment (maintains CPM)
+        - Other value: uses that specific adjustment
         """
         cpm = self.calculate_cpm()
         if not cpm or not self.nutritional_goal:
             return None
         
-        # Base calorie adjustment based on goal
-        if self.nutritional_goal == self.NutritionalGoal.LOSE_WEIGHT:
-            calories = cpm - 500  # 500 calorie deficit
-        elif self.nutritional_goal == self.NutritionalGoal.GAIN_WEIGHT:
-            calories = cpm + 500  # 500 calorie surplus
-        else:  # MAINTAIN_WEIGHT
-            calories = cpm
+        # Default calorie adjustments based on goal
+        default_adjustments = {
+            self.NutritionalGoal.LOSE_WEIGHT: -500,
+            self.NutritionalGoal.GAIN_WEIGHT: 500,
+            self.NutritionalGoal.MAINTAIN_WEIGHT: 0
+        }
         
-        # Add user's manual adjustment
-        calories += self.calorie_adjustment
+        # Determine which adjustment to use
+        if self.calorie_adjustment is None:
+            # Not set - use default based on goal
+            adjustment = default_adjustments.get(self.nutritional_goal, 0)
+        else:
+            # Explicitly set (including 0) - use that value
+            adjustment = self.calorie_adjustment
+        
+        calories = cpm + adjustment
         
         # Ensure minimum safe calories (1200 for women, 1500 for men)
-        min_calories = 1200 if self.gender == self.Gender.FEMALE else 1500
+        if self.gender == self.Gender.FEMALE:
+            min_calories = 1200
+        elif self.gender == self.Gender.MALE:
+            min_calories = 1400
+        else:
+            min_calories = 1300  # average
+        
         calories = max(calories, min_calories)
         
         return round(calories, 2)
@@ -402,9 +493,14 @@ class Profile(models.Model):
         if not all(required_fields):
             return False
         
-        # Calculate all values
+        # Calculate BMI first
         self.bmi = self.calculate_bmi()
         
+        # Auto-select calculation method if not explicitly set or if set to default
+        if not self.calculation_method:
+            self.calculation_method = self.get_recommended_calculation_method()
+        
+        # Calculate PPM based on method
         if self.calculation_method == self.CalculationMethod.HARRIS_BENEDICT:
             self.ppm = self.calculate_ppm_harris_benedict()
         else:
@@ -418,13 +514,18 @@ class Profile(models.Model):
             self.daily_protein = macros['protein']
             self.daily_carbohydrates = macros['carbohydrates']
             self.daily_fat = macros['fat']
+            self.protein_per_kg = macros['protein_per_kg']
+            self.protein_percentage = macros['protein_percentage']
+            self.carb_percentage = macros['carb_percentage']
+            self.fat_percentage = macros['fat_percentage']
         
         self.calculations_last_updated = timezone.now()
         
         # Save to database
         self.save(update_fields=[
-            'bmi', 'ppm', 'cpm', 'daily_calories',
+            'bmi', 'calculation_method', 'ppm', 'cpm', 'daily_calories',
             'daily_protein', 'daily_carbohydrates', 'daily_fat',
+            'protein_per_kg', 'protein_percentage', 'carb_percentage', 'fat_percentage',
             'calculations_last_updated'
         ])
         
