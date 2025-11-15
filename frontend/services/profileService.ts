@@ -7,6 +7,7 @@ export type ProfileData = {
     last_name: string;
     weight: string;
     height: string;
+    date_of_birth: string;
     gender: string;
     nutritional_goal: string;
     physical_activity: string;

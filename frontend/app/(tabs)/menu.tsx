@@ -29,12 +29,18 @@ export default function Menu() {
                 padding: 16
             }}
         >
-
             <Button
                 title="Mój profil"
                 onPress={() => router.push("/menu/profileScreen")}
                 color="orange"
             />
+            <View style={{marginTop: 20}}>
+            <Button
+                title="Moje cele"
+                onPress={() => router.push("/menu/goalScreen")}
+                color="green"
+            />
+            </View>
             <View style={{marginTop: 20}}>
             <Button 
                 title="Wyloguj" 

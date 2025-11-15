@@ -1,4 +1,3 @@
-// app/profileScreen.tsx
 import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, Button, ActivityIndicator, Alert, ScrollView } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
@@ -12,12 +11,12 @@ export default function ProfileScreen() {
         last_name: "",
         weight: "",
         height: "",
+        date_of_birth: "",
         gender: "",
         nutritional_goal: "",
         physical_activity: "",
     });
 
-    // Fetch profile data
     const fetchProfile = async () => {
         try {
             const data = await getProfile();
@@ -26,6 +25,7 @@ export default function ProfileScreen() {
                 last_name: data.last_name ?? "",
                 weight: data.weight?.toString() ?? "",
                 height: data.height?.toString() ?? "",
+                date_of_birth: data.date_of_birth ?? "",
                 gender: data.gender ?? "",
                 nutritional_goal: data.nutritional_goal ?? "",
                 physical_activity: data.physical_activity ?? "",
@@ -37,7 +37,6 @@ export default function ProfileScreen() {
         }
     };
 
-    // Save profile data
     const handleSave = async () => {
         setSaving(true);
         try {
@@ -77,6 +76,14 @@ export default function ProfileScreen() {
             <TextInput
                 value={formData.last_name}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, last_name: text }))}
+                style={{ borderWidth: 1, padding: 8, marginVertical: 6 }}
+            />
+
+            <Text>Date of birth (YYYY-MM-DD)</Text>
+            <TextInput
+                value={formData.date_of_birth}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, date_of_birth: text }))}
+                placeholder="1990-01-15"
                 style={{ borderWidth: 1, padding: 8, marginVertical: 6 }}
             />
 
@@ -128,8 +135,7 @@ export default function ProfileScreen() {
                 placeholder={{ label: "Choose gender...", value: null }}
             />
 
-            {/* NUTRITIONAL GOAL PICKER */}
-            <Text>Diet goal</Text>
+            <Text style={{ marginTop: 12 }}>Diet goal</Text>
             <RNPickerSelect
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, nutritional_goal: value }))}
                 value={formData.nutritional_goal}
@@ -141,8 +147,7 @@ export default function ProfileScreen() {
                 placeholder={{ label: "Choose goal...", value: null }}
             />
 
-            {/* PHYSICAL ACTIVITY PICKER */}
-            <Text>Physical activity</Text>
+            <Text style={{ marginTop: 12 }}>Physical activity</Text>
             <RNPickerSelect
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, physical_activity: value }))}
                 value={formData.physical_activity}
