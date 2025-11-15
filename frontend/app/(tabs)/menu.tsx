@@ -30,20 +30,20 @@ export default function Menu() {
             }}
         >
             <Button
-                title="Mój profil"
+                title="My profile"
                 onPress={() => router.push("/menu/profileScreen")}
                 color="orange"
             />
             <View style={{marginTop: 20}}>
             <Button
-                title="Moje cele"
+                title="My goals"
                 onPress={() => router.push("/menu/goalScreen")}
                 color="green"
             />
             </View>
             <View style={{marginTop: 20}}>
             <Button 
-                title="Wyloguj" 
+                title="Logout" 
                 onPress={handleLogout} 
                 color="red"
             />

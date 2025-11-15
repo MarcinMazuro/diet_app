@@ -9,43 +9,109 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
-import { calculateMacros, updateMacroPercentages, GoalData } from "@/services/goalService";
+
+import { getProfile } from "@/services/profileService";
+import { updateMacroPercentages } from "@/services/goalService";
+
 
 export default function GoalScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [goalData, setGoalData] = useState<GoalData | null>(null);
-  const [protein, setProtein] = useState("25.9");
-  const [carbs, setCarbs] = useState("48.1");
-  const [fat, setFat] = useState("25.9");
+  const [profile, setProfile] = useState<any>(null);
 
-  const fetchMacros = async () => {
+  const [protein, setProtein] = useState("");
+  const [carbs, setCarbs] = useState("");
+  const [fat, setFat] = useState("");
+
+  function fmt(n: any) {
+    return n ? parseInt(n).toString() : "0";
+  }
+
+const updateMacroInputs = (macros: any) => {
+  const mapping: { [key: string]: any } = {
+    protein: macros?.protein?.percentage ?? 0,
+    carbs: macros?.carbohydrates?.percentage ?? 0,
+    fat: macros?.fat?.percentage ?? 0,
+  };
+
+  setProtein(Math.round(mapping.protein).toString());
+  setCarbs(Math.round(mapping.carbs).toString());
+  setFat(Math.round(mapping.fat).toString());
+};
+
+
+  // Load profile and set initial macro percentages
+  const loadProfile = async () => {
     try {
       setLoading(true);
-      const data = await calculateMacros();
-      setGoalData(data);
-      setProtein(data.calculations.macros.protein.percentage.toFixed(1));
-      setCarbs(data.calculations.macros.carbohydrates.percentage.toFixed(1));
-      setFat(data.calculations.macros.fat.percentage.toFixed(1));
+      const p = await getProfile();
+
+      const prot = Math.round((parseFloat(p.custom_protein_percentage ?? "0") || 0) * 100);
+      const carb = Math.round((parseFloat(p.custom_carb_percentage ?? "0") || 0) * 100);
+      const f = Math.round((parseFloat(p.custom_fat_percentage ?? "0") || 0) * 100);
+
+      setProtein(prot.toString());
+      setCarbs(carb.toString());
+      setFat(f.toString());
+
+      if (prot + carb + f > 0) {
+        const res = await updateMacroPercentages(
+          parseFloat((prot / 100).toFixed(2)),
+          parseFloat((carb / 100).toFixed(2)),
+          parseFloat((f / 100).toFixed(2))
+        );
+        setProfile(res);
+      } else {
+        setProfile(p);
+      }
     } catch (err) {
       Alert.alert("Error", err instanceof Error ? err.message : "Error");
     } finally {
       setLoading(false);
     }
   };
+  // Save updated macro percentages
+  const handleSave = async () => {
+    const p = parseInt(protein) || 0;
+    const c = parseInt(carbs) || 0;
+    const f = parseInt(fat) || 0;
+    // Validate sum equals 100
+    const sum = p + c + f;
+    if (sum !== 100) {
+      Alert.alert("Error", `The sum of protein, carbs and fat must be 100%. Currently: ${sum}%`);
+      return;
+    }
 
-  const handleUpdateMacros = async () => {
     setSaving(true);
     try {
-      const p = parseFloat(protein);
-      const c = parseFloat(carbs);
-      const f = parseFloat(fat);
-      const data = await updateMacroPercentages(p, c, f);
-      setGoalData(data);
-      setProtein(data.calculations.macros.protein.percentage.toFixed(1));
-      setCarbs(data.calculations.macros.carbohydrates.percentage.toFixed(1));
-      setFat(data.calculations.macros.fat.percentage.toFixed(1));
+      const updated = await updateMacroPercentages(
+        parseFloat((p / 100).toFixed(2)),
+        parseFloat((c / 100).toFixed(2)),
+        parseFloat((f / 100).toFixed(2))
+      );
+
       Alert.alert("Success", "Macros updated");
+      setProfile(updated);
+      // Update inputs to reflect any backend adjustments
+      updateMacroInputs(updated?.calculations?.macros);
+    } catch (err) {
+      Alert.alert("Error", err instanceof Error ? err.message : "Error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Reset to default macros
+  const handleReset = async () => {
+    setSaving(true);
+    try {
+      // No parameters to reset
+      const updated = await updateMacroPercentages();
+      setProfile(updated);
+
+      updateMacroInputs(updated?.calculations?.macros);
+
+      Alert.alert("Reset", "Macros reset to default values");
     } catch (err) {
       Alert.alert("Error", err instanceof Error ? err.message : "Error");
     } finally {
@@ -54,7 +120,7 @@ export default function GoalScreen() {
   };
 
   useEffect(() => {
-    fetchMacros();
+    loadProfile();
   }, []);
 
   if (loading) {
@@ -64,80 +130,63 @@ export default function GoalScreen() {
       </View>
     );
   }
-
-  if (!goalData) {
-    return (
-      <View style={styles.center}>
-        <Text>No data</Text>
-      </View>
-    );
-  }
-
-  const { calculations } = goalData;
-  const proteinGrams = calculations.macros.protein.grams;
-  const carbsGrams = calculations.macros.carbohydrates.grams;
-  const fatGrams = calculations.macros.fat.grams;
+  // Recommended daily calories
+  const kcal =
+    profile?.calculations?.recommended_daily_calories ??
+    profile?.recommended_daily_calories ??
+    null;
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>
-        Daily Calories: {calculations.recommended_daily_calories.toFixed(0)} kcal
-      </Text>
+      {kcal && <Text style={styles.title}>Daily Calories: {fmt(kcal)} kcal</Text>}
 
-      <View style={styles.row}>
-        <View style={styles.inputCol}>
-          <Text style={styles.label}>Protein %:</Text>
-          <TextInput
-            value={protein}
-            onChangeText={setProtein}
-            keyboardType="decimal-pad"
-            style={styles.input}
-          />
-        </View>
-        <View style={styles.gramsCol}>
-          <Text style={styles.label}>Protein (g)</Text>
-          <Text style={styles.gramsValue}>{proteinGrams.toFixed(0)} g</Text>
-        </View>
-      </View>
+      <MacroRow
+        label="Protein %"
+        value={protein}
+        onChange={setProtein}
+        grams={profile?.calculations?.macros?.protein?.grams}
+      />
 
-      <View style={styles.row}>
-        <View style={styles.inputCol}>
-          <Text style={styles.label}>Carbs %:</Text>
-          <TextInput
-            value={carbs}
-            onChangeText={setCarbs}
-            keyboardType="decimal-pad"
-            style={styles.input}
-          />
-        </View>
-        <View style={styles.gramsCol}>
-          <Text style={styles.label}>Carbs (g)</Text>
-          <Text style={styles.gramsValue}>{carbsGrams.toFixed(0)} g</Text>
-        </View>
-      </View>
+      <MacroRow
+        label="Carbs %"
+        value={carbs}
+        onChange={setCarbs}
+        grams={profile?.calculations?.macros?.carbohydrates?.grams}
+      />
 
-      <View style={styles.row}>
-        <View style={styles.inputCol}>
-          <Text style={styles.label}>Fat %:</Text>
-          <TextInput
-            value={fat}
-            onChangeText={setFat}
-            keyboardType="decimal-pad"
-            style={styles.input}
-          />
-        </View>
-        <View style={styles.gramsCol}>
-          <Text style={styles.label}>Fat (g)</Text>
-          <Text style={styles.gramsValue}>{fatGrams.toFixed(0)} g</Text>
-        </View>
-      </View>
+      <MacroRow
+        label="Fat %"
+        value={fat}
+        onChange={setFat}
+        grams={profile?.calculations?.macros?.fat?.grams}
+      />
 
       {saving ? (
         <ActivityIndicator size="large" />
       ) : (
-        <Button title="Update Macros" onPress={handleUpdateMacros} />
+        <>
+          <Button title="Update" onPress={handleSave} />
+          <View style={{ marginTop: 10 }} />
+          <Button title="Reset" onPress={handleReset} color="#888" />
+        </>
       )}
     </ScrollView>
+  );
+}
+// Component for a single macro row
+function MacroRow({ label, value, onChange, grams }: any) {
+  const displayGrams = grams != null ? grams.toFixed(1) : "0";
+  return (
+    <View style={styles.row}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={(val) => onChange(val.replace(/[^0-9]/g, ""))}
+        keyboardType="number-pad"
+        style={styles.input}
+      />
+      <Text style={styles.gramsText}>{displayGrams} g</Text>
+    </View>
   );
 }
 
@@ -145,10 +194,8 @@ const styles = StyleSheet.create({
   container: { padding: 16 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   title: { fontSize: 20, fontWeight: "bold", marginBottom: 16, textAlign: "center" },
-  row: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  inputCol: { flex: 1, marginRight: 12 },
-  gramsCol: { width: 90, alignItems: "center" },
+  row: { marginBottom: 16 },
+  label: { fontSize: 14, marginBottom: 6 },
   input: { borderWidth: 1, padding: 8, borderRadius: 6 },
-  label: { fontSize: 12, marginBottom: 6 },
-  gramsValue: { fontSize: 16, fontWeight: "600", color: "#333" },
+  gramsText: { fontSize: 14, color: "#555", marginTop: 4 },
 });
