@@ -13,6 +13,11 @@ export default function RootLayout() {
                     headerShown: true,
                     headerBackTitle: "Go back",
                 }} />
+                <Stack.Screen name="menu/goalScreen" options={{
+                    title: "Nutrition Goals",
+                    headerShown: true,
+                    headerBackTitle: "Go back",
+                }} />
             </Stack>
         </AuthProvider>
     );

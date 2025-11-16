@@ -39,11 +39,15 @@ export async function refreshAccessToken(): Promise<string | null> {
 
     const data = await res.json();
     const access = data.access ?? data.access_token;
+    const newRefresh = data.refresh ?? data.refresh_token;
     if (access) {
         await SecureStore.setItemAsync("accessToken", access);
-        return access;
     }
-    return null;
+    if (newRefresh) {
+        await SecureStore.setItemAsync("refreshToken", newRefresh);
+    }
+
+    return access ?? null;
 }
 
 
