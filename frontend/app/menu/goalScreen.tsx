@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { extractMacroPercentages } from "@/utils/helper";
 import {
   View,
   Text,
@@ -44,32 +45,37 @@ const updateMacroInputs = (macros: any) => {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const p = await getProfile();
 
-      const prot = Math.round((parseFloat(p.custom_protein_percentage ?? "0") || 0) * 100);
-      const carb = Math.round((parseFloat(p.custom_carb_percentage ?? "0") || 0) * 100);
-      const f = Math.round((parseFloat(p.custom_fat_percentage ?? "0") || 0) * 100);
+      let p = await getProfile();
+      // Check if custom macros are set
+      const hasCustom =
+          p.custom_protein_percentage != null ||
+          p.custom_carb_percentage != null ||
+          p.custom_fat_percentage != null;
 
-      setProtein(prot.toString());
-      setCarbs(carb.toString());
-      setFat(f.toString());
+      // Fetch updated macros from backend
+      const data = await updateMacroPercentages(
+          hasCustom ? parseFloat(p.custom_protein_percentage ?? "0") : undefined,
+          hasCustom ? parseFloat(p.custom_carb_percentage ?? "0") : undefined,
+          hasCustom ? parseFloat(p.custom_fat_percentage ?? "0") : undefined
+      );
 
-      if (prot + carb + f > 0) {
-        const res = await updateMacroPercentages(
-          parseFloat((prot / 100).toFixed(2)),
-          parseFloat((carb / 100).toFixed(2)),
-          parseFloat((f / 100).toFixed(2))
-        );
-        setProfile(res);
-      } else {
-        setProfile(p);
-      }
+      // Extract percentages and update state
+      const { proteinPct, carbsPct, fatPct } = extractMacroPercentages(data);
+
+
+      // Update input fields
+      setProtein(Math.round(proteinPct).toString());
+      setCarbs(Math.round(carbsPct).toString());
+      setFat(Math.round(fatPct).toString());
+      setProfile(data);
     } catch (err) {
       Alert.alert("Error", err instanceof Error ? err.message : "Error");
     } finally {
       setLoading(false);
     }
   };
+
   // Save updated macro percentages
   const handleSave = async () => {
     const p = parseInt(protein) || 0;

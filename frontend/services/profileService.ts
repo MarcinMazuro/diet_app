@@ -1,6 +1,7 @@
 // services/profileService.ts
 import { ENDPOINTS } from "@/config/api";
 import { apiFetch } from "@/services/apiClient";
+import {updateMacroPercentages} from "@/services/goalService";
 
 export type ProfileData = {
   first_name: string;
@@ -23,10 +24,13 @@ export async function getProfile(): Promise<ProfileData> {
 }
 
 export async function updateProfile(profileData: ProfileData) {
+  await updateMacroPercentages();
   const response = await apiFetch(ENDPOINTS.ME, {
     method: "PATCH",
     body: JSON.stringify(profileData),
   });
+
+
   if (!response.ok) throw new Error("Update failed");
   return await response.json();
 }
