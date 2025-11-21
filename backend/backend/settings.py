@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'accounts',
     'profiles',
     'recipes',
+    'recommendations',
 
     # Third party apps
     'rest_framework',

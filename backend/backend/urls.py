@@ -20,4 +20,5 @@ urlpatterns = [
     path('api/test/', include('test_endpoints.urls')),
     path('api/profiles/', include('profiles.urls')),
     path('api/recipes/', include('recipes.urls')),
+    path('api/recommendations/', include('recommendations.urls')),
 ]
