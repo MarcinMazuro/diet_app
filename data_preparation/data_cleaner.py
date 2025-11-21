@@ -46,6 +46,36 @@ def join_if_list(field, sep=' | '):
         return sep.join(str(x) for x in field)
     return str(field)
 
+def filter_keywords(recipe):
+    keywords = set()
+    vals = recipe.get('keywords', [])
+    if isinstance(vals, str) and vals != '':
+        vals = [v.strip() for v in vals.split(',')]
+    for v in vals:
+        if isinstance(v, str) and v:
+            if "vegan" in v.lower():
+                print(v + " -> vegan")
+                keywords.add("vegan")
+            if "vegetarian" in v.lower():
+                print(v + " -> vegetarian")
+                keywords.add("vegetarian")
+            if "gluten" in v.lower():
+                print(v + " -> gluten")
+                keywords.add("gluten-free")
+            if "protein" in v.lower():
+                print(v + " -> high-protein")
+                keywords.add("high-protein")
+            if "low carb" in v.lower() or "low-carbohydrate" in v.lower():
+                print(v + " -> low-carbohydrate")
+                keywords.add("low-carbohydrate")
+            if "keto" in v.lower():
+                print(v + " -> keto")
+                keywords.add("keto")
+            if "low fat" in v.lower() or "low-fat" in v.lower():
+                print(v + " -> low-fat")
+                keywords.add("low-fat")
+    return keywords
+
 def process_recipes_to_df(recipes):
     """
     Input: list of recipe dicts
@@ -90,6 +120,9 @@ def process_recipes_to_df(recipes):
             for v in vals:
                 if isinstance(v, str) and v:
                     categories.add(v.lower())
+
+        filtered_keywords = filter_keywords(r)
+        categories.update(filtered_keywords)
         row['categories'] = categories
 
 
@@ -112,7 +145,7 @@ def print_categories(df):
         for c in category:
             categories.add(c)
     print(len(categories), "\n")
-    print(categories)
+ #   print(categories)
 
 def main():
    # recipes = select_recipes()

@@ -65,7 +65,8 @@
     "soup",
     "treat"
   ],
-  "culture": [
-    "jewish"
+  "diet": [
+    "vegan", "vegetarian", "low-carbohydrate", "gluten-free", "high-protein", "keto", "low-fat"
   ]
+
 }
