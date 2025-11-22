@@ -130,11 +130,11 @@ def calculate_and_save_nutrition(request):
     ])
     
     # Determine method reason
-    bmi = profile.calculate_bmi()
+    profile.calculation_method = profile.get_recommended_calculation_method()
     if profile.calculation_method == Profile.CalculationMethod.MIFFLIN:
-        method_reason = f"Mifflin-St Jeor selected (BMI: {bmi:.1f} - recommended for overweight individuals)"
+        method_reason = f"Mifflin-St Jeor selected (BMI: {profile.bmi:.1f} - recommended for overweight individuals)"
     else:
-        method_reason = f"Harris-Benedict selected (BMI: {bmi:.1f} - recommended for normal weight, active individuals)"
+        method_reason = f"Harris-Benedict selected (BMI: {profile.bmi:.1f} - recommended for normal weight, active individuals)"
     
     # Prepare response
     age = profile.calculate_age()
