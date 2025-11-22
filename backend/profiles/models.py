@@ -34,7 +34,6 @@ class Profile(models.Model):
         GAIN_WEIGHT = 'GAIN', 'Gain Weight'
 
     class PhysicalActivity(models.TextChoices):
-        # Updated to match the image (PAL values)
         SEDENTARY = 'SEDENTARY', 'Lying down, no movement (PAL: 1.2)'
         LOW = 'LOW', 'Low activity (office work, little movement) (PAL: 1.4-1.5)'
         MODERATE = 'MODERATE', 'Moderate activity (light work + recreational movement) (PAL: 1.6-1.7)'
