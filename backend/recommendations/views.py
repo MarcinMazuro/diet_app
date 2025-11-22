@@ -119,4 +119,44 @@ def rate_recipe(request):
         "rating": rating
     }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def recommendations_history(request):
+    """
+    Get the recommendation history for the authenticated user
+    """
+    profile = Profile.objects.get(user=request.user)
+    recommendations = Recommendation.objects.filter(profile=profile).order_by('-recommended_at')
+
+    history = []
+    for rec in recommendations:
+        history.append({
+            'recommendation_id': rec.id,
+            'recipe_id': rec.recipe.id,
+            'recipe_name': rec.recipe.name,
+            'recommended_at': rec.recommended_at,
+        })
+
+    return Response({'history': history})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def ratings_history(request):
+    """
+    Get the ratings history for the authenticated user
+    """
+    profile = Profile.objects.get(user=request.user)
+    ratings = Rating.objects.filter(profile=profile).order_by('-interacted_at')
+
+    history = []
+    for rating in ratings:
+        history.append({
+            'recipe_id': rating.recipe.id,
+            'recipe_name': rating.recipe.name,
+            'rating': rating.rating,
+            'interacted_at': rating.interacted_at,
+        })
+
+    return Response({'history': history})
+
 
