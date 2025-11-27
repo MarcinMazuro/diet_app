@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Profile
+from .services import AgeCalculator
 from datetime import date
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     """Serializer for the profile owner."""
@@ -38,8 +40,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
 
     def get_age(self, obj):
-        """Return calculated age"""
-        return obj.calculate_age()
+        """Return calculated age using AgeCalculator service"""
+        return AgeCalculator.calculate(obj.date_of_birth)
 
     def validate_date_of_birth(self, value):
         """Validate that date of birth is reasonable"""
@@ -118,13 +120,13 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class CalculationRequestSerializer(serializers.Serializer):
-    """Serializer for calculation request with optional calorie adjustment"""
+    """Serializer for calculation request with optional parameters"""
     calorie_adjustment = serializers.IntegerField(
         required=False,
         allow_null=True,
         min_value=-1000,
         max_value=1000,
-        help_text="Optional calorie adjustment (-1000 to +1000 kcal). If not provided, uses default based on goal."
+        help_text="Optional calorie adjustment (-1000 to +1000 kcal)."
     )
     custom_protein_percentage = serializers.DecimalField(
         required=False,
@@ -133,7 +135,7 @@ class CalculationRequestSerializer(serializers.Serializer):
         decimal_places=2,
         min_value=0,
         max_value=1,
-        help_text="Custom protein percentage (0.0-1.0). Must provide all three macros if using custom percentages."
+        help_text="Custom protein percentage (0.0-1.0)."
     )
     custom_carb_percentage = serializers.DecimalField(
         required=False,
@@ -142,7 +144,7 @@ class CalculationRequestSerializer(serializers.Serializer):
         decimal_places=2,
         min_value=0,
         max_value=1,
-        help_text="Custom carbohydrate percentage (0.0-1.0). Must provide all three macros if using custom percentages."
+        help_text="Custom carbohydrate percentage (0.0-1.0)."
     )
     custom_fat_percentage = serializers.DecimalField(
         required=False,
@@ -151,7 +153,7 @@ class CalculationRequestSerializer(serializers.Serializer):
         decimal_places=2,
         min_value=0,
         max_value=1,
-        help_text="Custom fat percentage (0.0-1.0). Must provide all three macros if using custom percentages."
+        help_text="Custom fat percentage (0.0-1.0)."
     )
 
     def validate(self, data):
@@ -176,15 +178,4 @@ class CalculationRequestSerializer(serializers.Serializer):
                 )
         
         return data
-
-
-class NutritionalCalculationsSerializer(serializers.Serializer):
-    """Serializer for nutritional calculations response"""
-    method = serializers.CharField()
-    method_reason = serializers.CharField()
-    calorie_adjustment_used = serializers.IntegerField()
-    basic_data = serializers.DictField()
-    calculations = serializers.DictField()
-    saved_to_profile = serializers.BooleanField()
-    last_updated = serializers.DateTimeField()
     
