@@ -1,11 +1,11 @@
 from rest_framework import serializers
 from .models import Recommendation, Rating
-from recipes.serializers import RecipeSerializer
+from recipes.serializers import SingleRecipeSerializer
 
 
 class RecipeRecommendationSerializer(serializers.ModelSerializer):
     """Serializer for recipe recommendations"""
-    recipe = RecipeSerializer(read_only=True)
+    recipe = SingleRecipeSerializer(read_only=True)
 
     class Meta:
         model = Recommendation
@@ -15,7 +15,7 @@ class RecipeRecommendationSerializer(serializers.ModelSerializer):
 
 class RecipeInteractionSerializer(serializers.ModelSerializer):
     """Serializer for recipe interactions (ratings)"""
-    recipe = RecipeSerializer(read_only=True)
+    recipe = SingleRecipeSerializer(read_only=True)
     recipe_id = serializers.IntegerField(write_only=True)
 
     class Meta:
@@ -32,9 +32,9 @@ class RecipeInteractionSerializer(serializers.ModelSerializer):
 
 class MealPlanSerializer(serializers.Serializer):
     """Serializer for meal plan response"""
-    breakfast = RecipeSerializer(read_only=True, allow_null=True)
-    lunch = RecipeSerializer(read_only=True, allow_null=True)
-    dinner = RecipeSerializer(read_only=True, allow_null=True)
+    breakfast = SingleRecipeSerializer(read_only=True, allow_null=True)
+    lunch = SingleRecipeSerializer(read_only=True, allow_null=True)
+    dinner = SingleRecipeSerializer(read_only=True, allow_null=True)
 
     totals = serializers.DictField(read_only=True)
     deviations = serializers.DictField(read_only=True, required=False)
