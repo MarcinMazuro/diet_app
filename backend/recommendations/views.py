@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from profiles.models import Profile
-from recipes.serializers import RecipeSerializer
+from recipes.serializers import  SingleRecipeSerializer
 from .models import Recommendation, Rating
 from .services import RecipeMatcher, MealPlanner
 
@@ -39,7 +39,7 @@ def recommend_recipe(request):
         recipe=recipe,
     )
 
-    serializer = RecipeSerializer(recipe)
+    serializer = SingleRecipeSerializer(recipe)
     data = serializer.data
     data['recommendation_id'] = rec_obj.id
 

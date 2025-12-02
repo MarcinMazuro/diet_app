@@ -2,7 +2,7 @@ from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
 from recipes.models import Recipe
 from profiles.models import Profile
-from recipes.serializers import RecipeSerializer
+from recipes.serializers import SingleRecipeSerializer
 from ..models import Recommendation
 from .recipe_matcher import RecipeMatcher
 
@@ -58,10 +58,10 @@ class MealPlan:
     def to_dict(self) -> Dict[str, Any]:
         """Convert meal plan to JSON-ready format"""
         return {
-            'breakfast': RecipeSerializer(self.breakfast).data if self.breakfast else None,
-            'lunch': RecipeSerializer(self.lunch).data if self.lunch else None,
-            'dinner': RecipeSerializer(self.dinner).data if self.dinner else None,
-            'snack': RecipeSerializer(self.snack).data if self.snack else None,  # <--- NOWE
+            'breakfast': SingleRecipeSerializer(self.breakfast).data if self.breakfast else None,
+            'lunch': SingleRecipeSerializer(self.lunch).data if self.lunch else None,
+            'dinner': SingleRecipeSerializer(self.dinner).data if self.dinner else None,
+            'snack': SingleRecipeSerializer(self.snack).data if self.snack else None,  # <--- NOWE
             'totals': {
                 'calories': round(self.total_calories, 1),
                 'protein': round(self.total_protein, 1),
