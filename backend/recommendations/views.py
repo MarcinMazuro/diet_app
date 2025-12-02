@@ -74,51 +74,6 @@ def generate_daily_plan(request):
 
     return Response(response_data)
 
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])  # Not tested yet
-def rate_recipe(request):
-    """
-    Rate a recipe (1-5 stars)
-
-    Body params:
-    - recipe_id: ID of the recipe (required)
-    """
-    recipe_id = request.data.get('recipe_id')
-    rating = request.data.get('rating')
-
-    if not recipe_id or not rating:
-        return Response(
-            {"detail": "recipe_id and rating are required."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    try:
-        rating = int(rating)
-        if rating < 1 or rating > 5:
-            return Response(
-                {"detail": "Rating must be between 1 and 5."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    except ValueError:
-        return Response(
-            {"detail": "Rating must be a number."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    # Create or update interaction
-    interaction, created = Rating.objects.update_or_create(
-        profile=Profile.objects.get(user=request.user),
-        recipe_id=recipe_id,
-        defaults={'rating': rating}
-    )
-
-    return Response({
-        "detail": "Rating saved successfully.",
-        "rating": rating
-    }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommendations_history(request):
@@ -138,6 +93,129 @@ def recommendations_history(request):
         })
 
     return Response({'history': history})
+
+
+@api_view(['POST', 'PUT'])
+@permission_classes([IsAuthenticated])
+def rate_recipe(request, recipe_id=None):
+    """
+    Create or update a rating for a recipe (1-5 stars)
+
+    Body params:
+    - recipe_id: ID of the recipe (required if not in URL)
+    - rating: Rating value 1-5 (required)
+    """
+    # Get recipe_id from URL or body
+    if not recipe_id:
+        recipe_id = request.data.get('recipe_id')
+
+    rating_value = request.data.get('rating')
+
+    if not recipe_id:
+        return Response(
+            {"detail": "recipe_id is required."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not rating_value:
+        return Response(
+            {"detail": "rating is required."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        rating_value = int(rating_value)
+        if rating_value < 1 or rating_value > 5:
+            return Response(
+                {"detail": "Rating must be between 1 and 5."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    except ValueError:
+        return Response(
+            {"detail": "Rating must be a number."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check if recipe exists
+    from recipes.models import Recipe
+    try:
+        recipe = Recipe.objects.get(id=recipe_id)
+    except Recipe.DoesNotExist:
+        return Response(
+            {"detail": "Recipe not found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Create or update rating
+    profile = Profile.objects.get(user=request.user)
+    rating_obj, created = Rating.objects.update_or_create(
+        profile=profile,
+        recipe=recipe,
+        defaults={'rating': rating_value}
+    )
+
+    return Response({
+        "detail": "Rating saved successfully.",
+        "rating_id": rating_obj.id,
+        "recipe_id": recipe.id,
+        "recipe_name": recipe.name,
+        "rating": rating_value,
+        "created": created
+    }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_rating(request, recipe_id):
+    """
+    Get user's rating for a specific recipe
+
+    URL params:
+    - recipe_id: ID of the recipe
+    """
+    profile = Profile.objects.get(user=request.user)
+
+    try:
+        rating = Rating.objects.get(profile=profile, recipe_id=recipe_id)
+    except Rating.DoesNotExist:
+        return Response(
+            {"detail": "Rating not found for this recipe."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    return Response({
+        "rating_id": rating.id,
+        "recipe_id": rating.recipe.id,
+        "recipe_name": rating.recipe.name,
+        "rating": rating.rating,
+        "interacted_at": rating.interacted_at
+    })
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_rating(request, recipe_id):
+    """
+    Delete user's rating for a specific recipe
+
+    URL params:
+    - recipe_id: ID of the recipe
+    """
+    profile = Profile.objects.get(user=request.user)
+
+    try:
+        rating = Rating.objects.get(profile=profile, recipe_id=recipe_id)
+        rating.delete()
+        return Response(
+            {"detail": "Rating deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT
+        )
+    except Rating.DoesNotExist:
+        return Response(
+            {"detail": "Rating not found for this recipe."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
