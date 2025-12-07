@@ -2,27 +2,28 @@ import random
 from typing import Optional
 from recipes.models import Recipe
 from profiles.models import Profile
+from recommendations.models import MealType
 
 
 class RecipeMatcher:
     MEAL_DISTRIBUTIONS = {
-        'BREAKFAST': 0.25,
-        'LUNCH': 0.35,
-        'DINNER': 0.30,
-        'SNACK': 0.10
+        MealType.BREAKFAST: 0.25,
+        MealType.LUNCH: 0.35,
+        MealType.DINNER: 0.30,
+        MealType.SNACK: 0.10
     }
 
     MEAL_TYPE_MAPPING = {
-        'BREAKFAST': ['breakfast', 'brunch', 'afternoon tea'],
-        'LUNCH': ['lunch', 'picnic', 'soup', 'salad', 'starter', 'side dish'],
-        'DINNER': ['dinner', 'supper', 'main course', 'fish course'],
-        'SNACK': ['snack', 'treat', 'canapes', 'dessert']
+        MealType.BREAKFAST: ['breakfast', 'brunch', 'afternoon tea'],
+        MealType.LUNCH: ['lunch', 'picnic', 'soup', 'salad', 'starter', 'side dish'],
+        MealType.DINNER: ['dinner', 'supper', 'main course', 'fish course'],
+        MealType.SNACK: ['snack', 'treat', 'canapes', 'dessert']
     }
 
     def find_best_recipe(
             self,
             profile: Profile,
-            meal_type: str = 'BREAKFAST',
+            meal_type: str = MealType.BREAKFAST,
             try_relaxed: bool = True
     ) -> Optional[Recipe]:
         """Return the best matching recipe for the given profile and meal type"""

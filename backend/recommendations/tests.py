@@ -5,7 +5,7 @@ from rest_framework import status
 from accounts.models import CustomUser
 from profiles.models import Profile
 from recipes.models import Recipe, Category, RecipeCategory
-from .models import Rating, Recommendation
+from .models import Rating, Plan
 
 
 class RatingCRUDTest(APITestCase):
@@ -289,4 +289,5 @@ class RatingCRUDTest(APITestCase):
         # Verify rating was updated
         rating = Rating.objects.get(profile=self.profile, recipe=self.recipe1)
         self.assertEqual(rating.rating, 5)
+
 

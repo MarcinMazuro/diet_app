@@ -3,14 +3,30 @@ from django.db import models
 from profiles.models import Profile
 from recipes.models import Recipe
 
+class PlanSource(models.TextChoices):
+    AI_GENERATED = 'ai_generated',
+    USER_SELECTED = 'user_selected',
 
-# For History of recommendations
-class Recommendation(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='recommendations')
+class MealType(models.TextChoices):
+    BREAKFAST = 'breakfast',
+    LUNCH = 'lunch',
+    DINNER = 'dinner',
+    SNACK = 'snack',
+
+
+class Plan(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='plans')
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    recommended_at = models.DateTimeField(auto_now_add=True)
+    date = models.DateField()
+    source = models.CharField(max_length=20, choices=PlanSource.choices, default=PlanSource.AI_GENERATED)
+    meal_type = models.CharField(max_length=20, choices=MealType.choices)
+
     class Meta:
-        db_table = "Recommendations"
+        db_table = "Plans"
+        unique_together = ('profile', 'date', 'meal_type')
+
+    def __str__(self):
+        return f"{self.profile.user.username} - {self.date} - {self.meal_type}"
 
 # For user rating
 class Rating(models.Model):
@@ -23,3 +39,6 @@ class Rating(models.Model):
     class Meta:
         db_table = "Ratings"
         unique_together = ('profile', 'recipe')
+
+    def __str__(self):
+        return f"{self.profile.user.username} - {self.recipe.name} - {self.rating}★"

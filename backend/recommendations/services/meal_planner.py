@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from recipes.models import Recipe
 from profiles.models import Profile
 from recipes.serializers import SingleRecipeSerializer
-from ..models import Recommendation
+from ..models import Plan, PlanSource, MealType
 from .recipe_matcher import RecipeMatcher
 
 
@@ -13,7 +13,7 @@ class MealPlan:
     breakfast: Optional[Recipe] = None
     lunch: Optional[Recipe] = None
     dinner: Optional[Recipe] = None
-    snack: Optional[Recipe] = None  # <--- NOWE POLE
+    snack: Optional[Recipe] = None
 
     # Totals
     total_calories: float = 0.0
@@ -81,10 +81,10 @@ class MealPlanner:
     def create_meal_plan(self, profile: Profile) -> Optional[MealPlan]:
         plan = MealPlan()
 
-        plan.breakfast = self.matcher.find_best_recipe(profile, 'BREAKFAST', try_relaxed=True)
-        plan.lunch = self.matcher.find_best_recipe(profile, 'LUNCH', try_relaxed=True)
-        plan.dinner = self.matcher.find_best_recipe(profile, 'DINNER', try_relaxed=True)
-        plan.snack = self.matcher.find_best_recipe(profile, 'SNACK', try_relaxed=True)  # <--- NOWE
+        plan.breakfast = self.matcher.find_best_recipe(profile, MealType.BREAKFAST, try_relaxed=True)
+        plan.lunch = self.matcher.find_best_recipe(profile, MealType.LUNCH, try_relaxed=True)
+        plan.dinner = self.matcher.find_best_recipe(profile, MealType.DINNER, try_relaxed=True)
+        plan.snack = self.matcher.find_best_recipe(profile, MealType.SNACK, try_relaxed=True)
 
         if not (plan.breakfast and plan.lunch and plan.dinner and plan.snack):
             return None
@@ -93,18 +93,3 @@ class MealPlanner:
 
         return plan
 
-    def save_meal_plan(self, plan: MealPlan, profile: Profile) -> None:
-        """Save meal plan recommendations to database history"""
-        meals = [
-            ('BREAKFAST', plan.breakfast),
-            ('LUNCH', plan.lunch),
-            ('DINNER', plan.dinner),
-            ('SNACK', plan.snack)  # <--- NOWE
-        ]
-
-        for meal_type, recipe in meals:
-            if recipe:
-                Recommendation.objects.create(
-                    profile=profile,
-                    recipe=recipe,
-                )
