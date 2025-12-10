@@ -24,13 +24,17 @@ export async function getProfile(): Promise<ProfileData> {
 }
 
 export async function updateProfile(profileData: ProfileData) {
-  await updateMacroPercentages();
+
   const response = await apiFetch(ENDPOINTS.ME, {
     method: "PATCH",
     body: JSON.stringify(profileData),
   });
 
 
-  if (!response.ok) throw new Error("Update failed");
+  if (!response.ok) {
+    const errText = await response.text();
+    console.log("BACKEND ERROR:", errText);
+    throw new Error(errText)};
+  await updateMacroPercentages();
   return await response.json();
 }

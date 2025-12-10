@@ -17,6 +17,8 @@ export default function ProfileScreen() {
         physical_activity: "",
     });
 
+    
+
     const fetchProfile = async () => {
         try {
             const data = await getProfile();
@@ -37,7 +39,19 @@ export default function ProfileScreen() {
         }
     };
 
+    const IsAnyDataEmpty = (data: ProfileData) => {
+    return Object.entries(data).some(([_, value]) => {
+        if (typeof value === "string") return value.trim() === "";
+        return value === null || value === undefined;
+    });
+    };
+
+
     const handleSave = async () => {
+        if (IsAnyDataEmpty(formData)) {
+            Alert.alert("Error", "Please fill in all fields before saving.");
+            return;
+        }
         setSaving(true);
         try {
             await updateProfile(formData);
@@ -111,26 +125,7 @@ export default function ProfileScreen() {
                 items={[
                     { label: "Male", value: "M" },
                     { label: "Female", value: "F" },
-                    { label: "Transgender", value: "T" },
-                    { label: "Non-binary", value: "NB" },
-                    { label: "Agender", value: "AG" },
-                    { label: "Genderfluid", value: "GF" },
-                    { label: "Bigender", value: "BI" },
-                    { label: "Pangender", value: "PAN" },
-                    { label: "Genderqueer", value: "GQ" },
-                    { label: "Demiboy", value: "DB" },
-                    { label: "Demigirl", value: "DG" },
-                    { label: "Androgyne", value: "AN" },
-                    { label: "Neutrois", value: "NE" },
-                    { label: "Trigender", value: "TRI" },
-                    { label: "Genderflux", value: "GX" },
-                    { label: "Xenogender", value: "XE" },
-                    { label: "Two-Spirit", value: "2S" },
-                    { label: "Aliagender", value: "AL" },
-                    { label: "Graygender", value: "GG" },
-                    { label: "Polygender", value: "PO" },
-                    { label: "Helboj", value: "HB" },
-                    { label: "Other", value: "O" },
+                    { label: "Other", value: "O" }
                 ]}
                 placeholder={{ label: "Choose gender...", value: null }}
             />
@@ -153,10 +148,10 @@ export default function ProfileScreen() {
                 value={formData.physical_activity}
                 items={[
                     { label: "Sedentary (little or no exercise)", value: "SEDENTARY" },
-                    { label: "Lightly active (light exercise/sports 1–3 days/week)", value: "LIGHT" },
+                    { label: "Lightly active (light exercise/sports 1–3 days/week)", value: "LOW" },
                     { label: "Moderately active (moderate exercise/sports 3–5 days/week)", value: "MODERATE" },
-                    { label: "Very active (hard exercise/sports 6–7 days/week)", value: "VERY" },
-                    { label: "Extra active (very hard exercise/sports & physical job)", value: "EXTRA" },
+                    { label: "Very active (hard exercise/sports 6–7 days/week)", value: "HIGH" },
+                    { label: "Extra active (very hard exercise/sports & physical job)", value: "VERY_HIGH" },
                 ]}
                 placeholder={{ label: "Choose activity level...", value: null }}
             />
