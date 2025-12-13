@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
 import {
   View,
-  Text,
   FlatList,
-  Image,
   ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
 } from "react-native";
-
+import RecipeCard from "../components/RecipeCard";
 import { getRecipes, Recipe } from "@/services/recipeService";
 
 export default function RecipesScreen() {
@@ -58,21 +55,9 @@ export default function RecipesScreen() {
     }
   };
   // Render individual recipe item
-  const renderItem = ({ item }: { item: Recipe }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.image_url }} style={styles.image} />
-      <View style={styles.info}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.meta}>
-          {item.calories} kcal • {item.preparation_time} min • {item.servings} servings
-        </Text>
-        {item.categories.length > 0 && (
-          <Text style={styles.categories}>
-            {item.categories.map((c) => c.name).join(", ")}
-          </Text>
-        )}
-      </View>
-    </View>
+  const renderItem = React.useCallback(
+    ({ item }: { item: Recipe }) => <RecipeCard recipe={item} />,
+    []
   );
 
   if (loading) {
@@ -82,57 +67,24 @@ export default function RecipesScreen() {
       </View>
     );
   }
-
+  // Render recipe list with infinite scrolling
   return (
     <FlatList
-      data={recipes}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={renderItem}
+      data={recipes} // Data source for the list
+      keyExtractor={(item) => item.id.toString()} // Unique key for each item for choosing purposes and performance
+      renderItem={renderItem} // Use memoized renderItem
       contentContainerStyle={styles.list}
-      onEndReached={loadMore}
-      onEndReachedThreshold={0.5}
-      ListFooterComponent={
-        loadingMore ? <ActivityIndicator style={{ margin: 16 }} /> : null
-      }
+      onEndReached={loadMore} // Trigger load more when reaching the end
+      onEndReachedThreshold={0.5} // Load more when 50% from bottom
+      initialNumToRender={10} // Initial items to render
+      maxToRenderPerBatch={10} // Max items to render per batch
+      windowSize={5} // Number of items outside of viewport to render
+      ListFooterComponent={loadingMore ? <ActivityIndicator style={{ margin: 16 }} /> : null} // Show loading indicator at bottom when loading more
     />
   );
 }
 
 const styles = StyleSheet.create({
-  list: {
-    padding: 16,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    overflow: "hidden",
-    marginBottom: 16,
-    elevation: 2,
-  },
-  image: {
-    width: "100%",
-    height: 180,
-  },
-  info: {
-    padding: 12,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  meta: {
-    fontSize: 13,
-    color: "#555",
-  },
-  categories: {
-    marginTop: 4,
-    fontSize: 12,
-    color: "#888",
-  },
+  list: { padding: 16 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
 });
