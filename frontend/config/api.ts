@@ -9,4 +9,5 @@ export const ENDPOINTS = {
   LOGOUT: '/api/v1/auth/logout/',
   ME: '/api/profiles/me/',
   CALCULATE_MACROS: '/api/profiles/calculate/',
+  RECIPES: '/api/recipes/',
 };
