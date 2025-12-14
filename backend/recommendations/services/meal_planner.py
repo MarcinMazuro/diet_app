@@ -1,9 +1,9 @@
-from typing import List, Dict, Optional, Any
+from typing import Dict, Optional, Any
 from dataclasses import dataclass
 from recipes.models import Recipe
 from profiles.models import Profile
 from recipes.serializers import SingleRecipeSerializer
-from ..models import Plan, PlanSource, MealType
+from ..models import MealType
 from .recipe_matcher import RecipeMatcher
 
 

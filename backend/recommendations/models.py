@@ -3,7 +3,7 @@ from django.db import models
 from profiles.models import Profile
 from recipes.models import Recipe
 
-class PlanSource(models.TextChoices):
+class MealSource(models.TextChoices):
     AI_GENERATED = 'ai_generated',
     USER_SELECTED = 'user_selected',
 
@@ -14,15 +14,15 @@ class MealType(models.TextChoices):
     SNACK = 'snack',
 
 
-class Plan(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='plans')
+class Meal(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='meals')
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     date = models.DateField()
-    source = models.CharField(max_length=20, choices=PlanSource.choices, default=PlanSource.AI_GENERATED)
+    source = models.CharField(max_length=20, choices=MealSource.choices, default=MealSource.AI_GENERATED)
     meal_type = models.CharField(max_length=20, choices=MealType.choices)
 
     class Meta:
-        db_table = "Plans"
+        db_table = "Meals"
         unique_together = ('profile', 'date', 'meal_type')
 
     def __str__(self):

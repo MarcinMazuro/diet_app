@@ -42,10 +42,11 @@ def validate_meal_type(meal_type):
             {"detail": "meal_type is required."},
             status=status.HTTP_400_BAD_REQUEST
         )
+    meal_type = meal_type.lower()
 
     if meal_type not in [MealType.BREAKFAST, MealType.DINNER, MealType.LUNCH, MealType.SNACK]:
         return Response(
-            {"detail": "Invalid meal_type. Must be BREAKFAST, LUNCH, DINNER, or SNACK."},
+            {"detail": "Invalid meal_type. Must be breakfast, lunch, dinner, or snack."},
             status=status.HTTP_400_BAD_REQUEST
         )
 

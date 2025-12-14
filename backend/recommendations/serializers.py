@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Plan, Rating
+from .models import Meal, Rating
 from recipes.serializers import SingleRecipeSerializer
 
 
@@ -9,7 +9,7 @@ class PlanSerializer(serializers.ModelSerializer):
     recipe_id = serializers.IntegerField(write_only=True)
 
     class Meta:
-        model = Plan
+        model = Meal
         fields = ['id', 'recipe', 'recipe_id', 'date', 'meal_type', 'source']
         read_only_fields = ['id', 'source']
 

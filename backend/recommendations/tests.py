@@ -1,11 +1,9 @@
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
 from accounts.models import CustomUser
-from profiles.models import Profile
 from recipes.models import Recipe, Category, RecipeCategory
-from .models import Rating, Plan
+from .models import Rating
 
 
 class RatingCRUDTest(APITestCase):
@@ -75,7 +73,7 @@ class RatingCRUDTest(APITestCase):
 
     def test_create_rating(self):
         """Test creating a new rating"""
-        url = reverse('create_rating')
+        url = reverse('ratings_list')
         data = {
             'recipe_id': self.recipe1.id,
             'rating': 5
@@ -93,7 +91,7 @@ class RatingCRUDTest(APITestCase):
 
     def test_create_rating_missing_recipe_id(self):
         """Test creating rating without recipe_id"""
-        url = reverse('create_rating')
+        url = reverse('ratings_list')
         data = {'rating': 5}
         response = self.client.post(url, data, format='json')
 
@@ -102,7 +100,7 @@ class RatingCRUDTest(APITestCase):
 
     def test_create_rating_missing_rating_value(self):
         """Test creating rating without rating value"""
-        url = reverse('create_rating')
+        url = reverse('ratings_list')
         data = {'recipe_id': self.recipe1.id}
         response = self.client.post(url, data, format='json')
 
@@ -111,7 +109,7 @@ class RatingCRUDTest(APITestCase):
 
     def test_create_rating_invalid_range(self):
         """Test creating rating with invalid range"""
-        url = reverse('create_rating')
+        url = reverse('ratings_list')
 
         # Test rating too low
         data = {'recipe_id': self.recipe1.id, 'rating': 0}
@@ -125,7 +123,7 @@ class RatingCRUDTest(APITestCase):
 
     def test_create_rating_invalid_type(self):
         """Test creating rating with non-numeric value"""
-        url = reverse('create_rating')
+        url = reverse('ratings_list')
         data = {'recipe_id': self.recipe1.id, 'rating': 'five'}
         response = self.client.post(url, data, format='json')
 
@@ -134,7 +132,7 @@ class RatingCRUDTest(APITestCase):
 
     def test_create_rating_nonexistent_recipe(self):
         """Test creating rating for non-existent recipe"""
-        url = reverse('create_rating')
+        url = reverse('ratings_list')
         data = {'recipe_id': 99999, 'rating': 5}
         response = self.client.post(url, data, format='json')
 
@@ -147,9 +145,9 @@ class RatingCRUDTest(APITestCase):
         Rating.objects.create(profile=self.profile, recipe=self.recipe1, rating=3)
 
         # Update rating
-        url = reverse('update_rating', kwargs={'recipe_id': self.recipe1.id})
+        url = reverse('rating_detail', kwargs={'recipe_id': self.recipe1.id})
         data = {'rating': 5}
-        response = self.client.put(url, data, format='json')
+        response = self.client.patch(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['rating'], 5)
@@ -164,7 +162,7 @@ class RatingCRUDTest(APITestCase):
         # Create rating
         Rating.objects.create(profile=self.profile, recipe=self.recipe1, rating=4)
 
-        url = reverse('get_rating', kwargs={'recipe_id': self.recipe1.id})
+        url = reverse('rating_detail', kwargs={'recipe_id': self.recipe1.id})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -175,7 +173,7 @@ class RatingCRUDTest(APITestCase):
 
     def test_get_rating_not_found(self):
         """Test getting rating that doesn't exist"""
-        url = reverse('get_rating', kwargs={'recipe_id': self.recipe1.id})
+        url = reverse('rating_detail', kwargs={'recipe_id': self.recipe1.id})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -186,7 +184,7 @@ class RatingCRUDTest(APITestCase):
         # Create rating
         Rating.objects.create(profile=self.profile, recipe=self.recipe1, rating=4)
 
-        url = reverse('delete_rating', kwargs={'recipe_id': self.recipe1.id})
+        url = reverse('rating_detail', kwargs={'recipe_id': self.recipe1.id})
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -196,7 +194,7 @@ class RatingCRUDTest(APITestCase):
 
     def test_delete_rating_not_found(self):
         """Test deleting rating that doesn't exist"""
-        url = reverse('delete_rating', kwargs={'recipe_id': self.recipe1.id})
+        url = reverse('rating_detail', kwargs={'recipe_id': self.recipe1.id})
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -208,15 +206,15 @@ class RatingCRUDTest(APITestCase):
         Rating.objects.create(profile=self.profile, recipe=self.recipe1, rating=5)
         Rating.objects.create(profile=self.profile, recipe=self.recipe2, rating=4)
 
-        url = reverse('ratings_history')
+        url = reverse('ratings_list')
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('history', response.data)
-        self.assertEqual(len(response.data['history']), 2)
+        self.assertIn('ratings', response.data)
+        self.assertEqual(len(response.data['ratings']), 2)
 
         # Verify ratings are ordered by interacted_at (descending)
-        ratings = response.data['history']
+        ratings = response.data['ratings']
         self.assertEqual(ratings[0]['rating'], 4)  # recipe2 (more recent)
         self.assertEqual(ratings[1]['rating'], 5)  # recipe1
 
@@ -229,49 +227,49 @@ class RatingCRUDTest(APITestCase):
         Rating.objects.create(profile=self.profile2, recipe=self.recipe1, rating=3)
 
         # User1 should only see their own rating
-        url = reverse('ratings_history')
+        url = reverse('ratings_list')
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['history']), 1)
-        self.assertEqual(response.data['history'][0]['rating'], 5)
+        self.assertEqual(len(response.data['ratings']), 1)
+        self.assertEqual(response.data['ratings'][0]['rating'], 5)
 
         # Switch to user2
         self.client.force_authenticate(user=self.user2)
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['history']), 1)
-        self.assertEqual(response.data['history'][0]['rating'], 3)
+        self.assertEqual(len(response.data['ratings']), 1)
+        self.assertEqual(response.data['ratings'][0]['rating'], 3)
 
     def test_unauthenticated_access(self):
         """Test that unauthenticated users cannot access rating endpoints"""
         self.client.force_authenticate(user=None)
 
         # Test create
-        url = reverse('create_rating')
+        url = reverse('ratings_list')
         response = self.client.post(url, {'recipe_id': self.recipe1.id, 'rating': 5})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # Test get
-        url = reverse('get_rating', kwargs={'recipe_id': self.recipe1.id})
+        url = reverse('rating_detail', kwargs={'recipe_id': self.recipe1.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # Test delete
-        url = reverse('delete_rating', kwargs={'recipe_id': self.recipe1.id})
+        url = reverse('rating_detail', kwargs={'recipe_id': self.recipe1.id})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # Test list
-        url = reverse('ratings_history')
+        url = reverse('ratings_list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_unique_constraint(self):
         """Test that a user can only have one rating per recipe"""
         # Create first rating
-        url = reverse('create_rating')
+        url = reverse('ratings_list')
         data = {'recipe_id': self.recipe1.id, 'rating': 3}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
