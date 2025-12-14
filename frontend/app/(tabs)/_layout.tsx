@@ -37,9 +37,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="test" 
+        name="recipes" 
         options={{
-            title: "Test Screen",
+            title: "Recipes",
+            tabBarIcon: ({ color, size }) => (
+                <MaterialCommunityIcons name="food-takeout-box" size={size} color={color} />
+            ),
 
 
         }}
