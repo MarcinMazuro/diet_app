@@ -1,43 +1,16 @@
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Docker Compose reference guide at
-# https://docs.docker.com/go/compose-spec-reference/
-
 services:
-  db:
-    image: postgres:16
-    restart: always
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=diet_db
-      - POSTGRES_USER=diet_user
-      - POSTGRES_PASSWORD=password
-    ports:
-      - "5433:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U diet_user -d diet_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   server:
     build:
       context: .
     ports:
       - 8000:8000
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=diet_db
-      - DB_USER=diet_user
-      - DB_PASSWORD=password
-      - DEBUG=True
-      - SECRET_KEY=django-insecure-c_di%)4vyf2!%&=46=169u$dxbo%x!p!%)w(cjswt)r#w4@md)
-    depends_on:
-      db:
-        condition: service_healthy
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DEBUG=${DEBUG:-True}
+      - SECRET_KEY=${SECRET_KEY}
     volumes:
       - .:/app
-
-volumes:
-  db-data:
