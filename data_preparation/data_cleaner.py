@@ -6,6 +6,18 @@ from math import ceil
 DURATION_RE = re.compile(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', re.I)
 NUMBER_RE = re.compile(r'[-+]?\d*\.?\d+')
 
+DISH_TYPES = ["afternoon tea",
+    "breakfast",
+    "brunch",
+    "buffet",
+    "dinner",
+    "fish course",
+    "lunch",
+    "main course",
+    "picnic",
+    "starter",
+    "supper"]
+
 def parse_iso_duration_to_minutes(iso: str):
     if not iso or not isinstance(iso, str):
         return None
@@ -76,6 +88,27 @@ def filter_keywords(recipe):
                 keywords.add("low-fat")
     return keywords
 
+def has_dish_type(categories):
+    for dt in DISH_TYPES:
+        if dt in categories:
+            return True
+    return False
+
+def print_stats(df):
+
+    print(df.head())
+    print("Recipes: ", len(df))
+
+    dinner_mask = df['categories'].astype(str).str.contains("dinner", case=False, na=False, regex=False)
+    breakfast_mask = df['categories'].astype(str).str.contains("breakfast", case=False, na=False, regex=False)
+    lunch_mask = df['categories'].astype(str).str.contains("lunch", case=False)
+    snack_mask = df['categories'].astype(str).str.contains("snack", case=False)
+
+    print("dinner count ", dinner_mask.sum())
+    print("breakfast count ", breakfast_mask.sum())
+    print("lunch count ", lunch_mask.sum())
+    print("snack count ", snack_mask.sum())
+
 def process_recipes_to_df(recipes):
     """
     Input: list of recipe dicts
@@ -125,8 +158,8 @@ def process_recipes_to_df(recipes):
         categories.update(filtered_keywords)
         row['categories'] = categories
 
-
-        rows.append(row)
+        if has_dish_type(row['categories']):
+            rows.append(row)
 
 
     df = pd.DataFrame(rows)
@@ -154,8 +187,8 @@ def main():
    with open("data/bbcgoodfood_full_recipes.json", "r") as file:
         df = process_recipes_to_df(json.load(file))
         df.dropna(inplace=True)
-        print(len(df))
-        print_categories(df)
+        print_stats(df)
+
    df.to_json("data/bbcgoodfood_recipes_clean.json",
               orient='records',
               indent=2,

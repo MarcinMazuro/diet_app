@@ -1,4 +1,6 @@
 from django.core.management.base import BaseCommand
+from django.db import transaction
+
 from recipes.models import Recipe, Category, RecipeCategory
 import json
 import os
@@ -36,6 +38,9 @@ class Command(BaseCommand):
 
         self.stdout.write(f'Loading recipes from: {recipes_full_path}')
         recipes = self.load_recipes(recipes_full_path)
+
+        self.remove_stale_recipes(recipes)
+
         self.insert_recipes(recipes, category_map)
 
         self.stdout.write(self.style.SUCCESS('Successfully loaded all data!'))
@@ -61,6 +66,27 @@ class Command(BaseCommand):
         except json.JSONDecodeError as e:
             self.stdout.write(self.style.ERROR(f'Invalid JSON in recipes file: {e}'))
             raise
+
+    def remove_stale_recipes(self, recipes_data):
+        """
+        Delete recipes that are no longer present in the provided recipes_data.
+        """
+        sources_in_file = {r.get('url') for r in recipes_data if r.get('url')}
+
+        if not sources_in_file:
+            self.stdout.write('No source URLs found in JSON; skipping stale deletion.')
+            return
+
+        # Delete recipes which are not not in recipe file
+        qs = Recipe.objects.exclude(source__in=sources_in_file)
+        stale_count = qs.count()
+        if stale_count:
+            with transaction.atomic():
+                qs.delete()
+            self.stdout.write(self.style.WARNING(f'Deleted {stale_count} stale recipes not present in JSON'))
+        else:
+            self.stdout.write('No stale recipes to delete.')
+
 
     def insert_categories(self, categories_dict):
         """Inserts categories with types and returns mapping name_lowercase->Category object"""
