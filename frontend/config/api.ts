@@ -10,4 +10,5 @@ export const ENDPOINTS = {
   ME: '/api/profiles/me/',
   CALCULATE_MACROS: '/api/profiles/calculate/',
   RECIPES: '/api/recipes/',
+  RATINGS: '/api/recommendations/ratings/',
 };
