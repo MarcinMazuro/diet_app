@@ -50,5 +50,5 @@ export async function updateRating(recipeId: number, rating: number) {
 export async function deleteRating(recipeId: number) {
   const res = await apiFetch(`${ENDPOINTS.RATINGS}${recipeId}/`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete rating");
-  return;
+  return res.json;
 }
