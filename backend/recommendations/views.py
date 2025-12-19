@@ -265,7 +265,9 @@ def meal_plan_detail(request, plan_id):
         plan.delete()
         return Response(
             {"detail": "Plan deleted successfully."},
-            status=status.HTTP_204_NO_CONTENT
+            # Returning 200 because expo fetch has issues with 204 responses with json body
+            #status=status.HTTP_204_NO_CONTENT
+            status=status.HTTP_200_OK
         )
 
 
@@ -409,7 +411,8 @@ def rating_detail(request, recipe_id):
             rating.delete()
             return Response(
                 {"detail": "Rating deleted successfully."},
-                status=status.HTTP_204_NO_CONTENT
+                #status=status.HTTP_204_NO_CONTENT
+                status=status.HTTP_200_OK
             )
         except Rating.DoesNotExist:
             return Response(

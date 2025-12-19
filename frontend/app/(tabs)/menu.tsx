@@ -42,6 +42,13 @@ export default function Menu() {
             />
             </View>
             <View style={{marginTop: 20}}>
+            <Button
+                title="My ratings"
+                onPress={() => router.push("/menu/my-raitings")}
+                color="purple"
+            />
+            </View>
+            <View style={{marginTop: 20}}>
             <Button 
                 title="Logout" 
                 onPress={handleLogout} 
