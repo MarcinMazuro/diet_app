@@ -28,9 +28,9 @@ export default function TabsLayout() {
   return (
     <Tabs screenOptions={{ tabBarActiveTintColor: "coral" }} >
       <Tabs.Screen 
-        name="index" 
+        name="meal-plan" 
         options={{
-          title: "Home Screen",
+          title: "Planner",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="food-apple" size={size} color={color} />
           ),

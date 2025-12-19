@@ -38,7 +38,7 @@ export default function RegisterScreen() {
       );
       // Navigate to main app on success
       setAuthenticated(true);
-      router.replace('/(tabs)');
+      router.replace('../(tabs)');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Registration failed';
       Alert.alert('Registration Error', msg);
