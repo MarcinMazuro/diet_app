@@ -11,7 +11,7 @@ const RecipeCard = React.memo(({ recipe }: { recipe: Recipe }) => {
     <Pressable
       onPress={() =>
         router.push({
-          pathname: "/screens/[id]",
+          pathname: "/screens/recipe/[id]",
           params: { id: recipe.id.toString() },
         })
       }

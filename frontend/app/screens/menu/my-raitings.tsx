@@ -37,7 +37,7 @@ export default function MyRatingsScreen() {
       keyExtractor={(item) => item.recipe_id.toString()}
       renderItem={({ item }) => (
         <Pressable
-          onPress={() => router.push(`/screens/${item.recipe_id}`)}
+          onPress={() => router.push(`/screens/recipe/${item.recipe_id}`)}
           style={{ padding: 16, borderBottomWidth: 1 }}
         >
           <Text style={{ fontWeight: "bold" }}>{item.recipe_name}</Text>

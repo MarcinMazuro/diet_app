@@ -9,8 +9,8 @@ import {
   Text,
   StyleSheet,
 } from "react-native";
-import RecipeCard from "../components/RecipeCard";
-import FilterModal from "../components/FilterModal";
+import RecipeCard from "@/components/RecipeCard";
+import FilterModal from "@/components/FilterModal";
 import { getRecipes, Recipe } from "@/services/recipeService";
 
 export default function RecipesScreen() {
