@@ -23,16 +23,16 @@ export default function Menu() {
         <View
             style={{
                 flex: 1,
-                justifyContent: "center",
+
                 alignItems: "center",
-                backgroundColor: "darkblue",
+                backgroundColor: "#f3f3f3",
                 padding: 16
             }}
         >
             <Button
                 title="My profile"
                 onPress={() => router.push("/screens/menu/profileScreen")}
-                color="orange"
+                color="green"
             />
             <View style={{marginTop: 20}}>
             <Button
@@ -45,7 +45,7 @@ export default function Menu() {
             <Button
                 title="My ratings"
                 onPress={() => router.push("/screens/menu/my-raitings")}
-                color="purple"
+                color="green"
             />
             </View>
             <View style={{marginTop: 20}}>
