@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { getMealPlanByDate } from "@/services/mealPlanService";
 import { groupByMealType } from "@/utils/groupMealPlans";
 import { MealPlanItem, MealType } from "@/services/mealPlanService";
+import { useFocusEffect } from "expo-router";
 
 export default function MealPlanScreen() {
   const router = useRouter();
@@ -27,6 +28,13 @@ export default function MealPlanScreen() {
   });
   // Date picker visibility (for Android)
   const [showPicker, setShowPicker] = useState(false);
+
+  // Reload when screen is focused (e.g., after adding a meal)
+  useFocusEffect(
+    useCallback(() => {
+      loadPlan();
+    }, [date])
+  );
 
   const loadPlan = async () => {
     setLoading(true);
@@ -91,9 +99,19 @@ const onChangeDate = (event: any, selectedDate?: Date) => {
         <View key={meal} style={styles.section}>
           <View style={styles.header}>
             <Text style={styles.mealTitle}>{meal.toUpperCase()}</Text>
-            <Pressable onPress={() => alert("TODO: add recipe")}>
-              <Text style={styles.add}>＋</Text>
-            </Pressable>
+            <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/screens/planner/recipe-picker",
+                    params: {
+                      date: date.toISOString().split("T")[0],
+                      mealType: meal,
+                    },
+                  })
+                }
+              >
+                <Text style={styles.add}>＋</Text>
+              </Pressable>
           </View>
 
           {plans[meal].length === 0 && <Text style={styles.empty}>No meals</Text>}

@@ -12,6 +12,9 @@ import {
 import RecipeCard from "@/components/RecipeCard";
 import FilterModal from "@/components/FilterModal";
 import { getRecipes, Recipe } from "@/services/recipeService";
+import SearchBar from "@/components/SearchBar";
+
+
 
 export default function RecipesScreen() {
   // All loaded pages (dynamicly expanded)
@@ -87,6 +90,11 @@ export default function RecipesScreen() {
   setFiltersVisible(false);
 };
 
+
+const renderFooter = React.useMemo(() => {
+  return loadingMore ? <ActivityIndicator style={{ margin: 16 }} /> : null;
+}, [loadingMore]);
+
   // Handle search button press
   const handleSearch = () => {
     loadRecipes(1, false);
@@ -101,28 +109,17 @@ export default function RecipesScreen() {
 
   // Render recipe list with infinite scrolling
    return (
-    <View style={{ flex: 1 }}>
-      {/* Search bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          placeholder="Search recipes..."
-          value={searchName}
-          onChangeText={setSearchName}
-          style={styles.searchInput}
-          returnKeyType="search"
-          onSubmitEditing={handleSearch}
-        />
-        <View style={{ flexDirection: "row", gap: 8 }}>
-        <Button title="Search" onPress={handleSearch} />
-        
-        <Button title="Filters" onPress={() => setFiltersVisible(true)} />
-        </View>
-      </View>
+    <View style={styles.searchContainer}>
+    <SearchBar onSearch={(query) => setSearchName(query)} initialValue={searchName} />
+    <View style={{ marginTop: 8 }}>
+      <Button title="Filters" onPress={() => setFiltersVisible(true)} />
+    </View>
+
 
       {/* Recipes list */}
     {loading && page === 1 ? ( 
       // Show loading indicator when loading first page
-        <View style={styles.center}>
+        <View style={styles.container}>
           <ActivityIndicator size="large" />
         </View>
       ) : (
@@ -137,9 +134,8 @@ export default function RecipesScreen() {
       initialNumToRender={10} // Initial items to render
       maxToRenderPerBatch={10} // Max items to render per batch
       windowSize={5} // Number of items outside of viewport to render
-      ListFooterComponent={
-        loadingMore ? <ActivityIndicator style={{ margin: 16 }} /> : null
-      } // Show loading indicator at bottom when loading more
+      ListFooterComponent={renderFooter}// Show loading indicator at bottom when loading more
+      removeClippedSubviews// Improve performance by removing offscreen items
     />
   )}
 
@@ -157,19 +153,17 @@ export default function RecipesScreen() {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: 16 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  searchContainer: {
+   searchContainer: {
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  container: { flex: 1, paddingHorizontal: 12, paddingTop: 12 },
+  topBar: {
     flexDirection: "row",
-    padding: 8,
     alignItems: "center",
-    justifyContent: "space-between",
+    marginBottom: 12, 
+    gap: 8,
   },
-  searchInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 6,
-    padding: 8,
-    marginRight: 8,
-  },
+  list: { paddingBottom: 16 },
 });

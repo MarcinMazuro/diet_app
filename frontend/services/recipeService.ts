@@ -58,3 +58,14 @@ export async function getRecipes(
 
   return res.json();
 }
+
+export async function getRecipeById(id: number): Promise<Recipe> {
+  const res = await apiFetch(`${ENDPOINTS.RECIPES}${id}/`, {
+    method: "GET",
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch recipe");
+  }
+
+  return res.json();
+}
