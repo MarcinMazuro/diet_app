@@ -7,13 +7,16 @@ import {
   StyleSheet,
   Button,
   Platform,
+  Alert
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
-import { getMealPlanByDate } from "@/services/mealPlanService";
+import { getMealPlanByDate, deleteMealPlanItem } from "@/services/mealPlanService";
 import { groupByMealType } from "@/utils/groupMealPlans";
 import { MealPlanItem, MealType } from "@/services/mealPlanService";
 import { useFocusEffect } from "expo-router";
+
+
 
 export default function MealPlanScreen() {
   const router = useRouter();
@@ -69,13 +72,59 @@ const onChangeDate = (event: any, selectedDate?: Date) => {
   }
 };
 
+const handleDelete = async (planId: number, meal: MealType) => {
+  Alert.alert(
+    "Remove meal",
+    "Are you sure you want to remove this meal?",
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteMealPlanItem(planId);
+
+            // 🔥 lokalna aktualizacja stanu (bez reloadu)
+            setPlans((prev) => ({
+              ...prev,
+              [meal]: prev[meal].filter((item) => item.plan_id !== planId),
+            }));
+          } catch (e) {
+            console.error(e);
+            Alert.alert("Error", "Could not remove meal");
+          }
+        },
+      },
+    ]
+  );
+};
+
+
   if (loading) return <ActivityIndicator style={{ marginTop: 40 }} />;
 
   return (
+    
+
+
+
     <View style={styles.container}>
+        
       {/* Picker */}
       <View style={{ marginBottom: 12, alignItems: "center", flexDirection: "row", justifyContent: "space-between" }}>
         <Text style={styles.title}>Date: {date.toISOString().split("T")[0]}</Text>
+        <Button
+          title="⚡Generate"
+          onPress={() =>
+            router.push({
+              pathname: "/screens/planner/generate-plan",
+              params: {
+                date: date.toISOString().split("T")[0],
+                mode: "daily",
+              },
+            })
+          }
+        />
         <Button
           title={`change date`}
           onPress={() => setShowPicker(true)}
@@ -95,37 +144,66 @@ const onChangeDate = (event: any, selectedDate?: Date) => {
 
 
       {/* Meals */}
-      {(["breakfast", "lunch", "dinner", "snack"] as const).map((meal) => (
-        <View key={meal} style={styles.section}>
-          <View style={styles.header}>
-            <Text style={styles.mealTitle}>{meal.toUpperCase()}</Text>
-            <Pressable
-                onPress={() =>
-                  router.push({
-                    pathname: "/screens/planner/recipe-picker",
-                    params: {
-                      date: date.toISOString().split("T")[0],
-                      mealType: meal,
-                    },
-                  })
-                }
-              >
-                <Text style={styles.add}>＋</Text>
-              </Pressable>
-          </View>
+{(["breakfast", "lunch", "dinner", "snack"] as const).map((meal) => (
+  <View key={meal} style={styles.section}>
+    {/* Header */}
+    <View style={styles.header}>
+      <Text style={styles.mealTitle}>{meal.toUpperCase()}</Text>
+      <View style={styles.actions}>
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/screens/planner/generate-plan",
+              params: {
+                date: date.toISOString().split("T")[0],
+                mode: "single",
+                mealType: meal,
+              },
+            })
+          }
+        >
+          <Text style={styles.generate}>⚡</Text>
+        </Pressable>
 
-          {plans[meal].length === 0 && <Text style={styles.empty}>No meals</Text>}
+        {/*ADD MANUALLY */}
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/screens/planner/recipe-picker",
+              params: {
+                date: date.toISOString().split("T")[0],
+                mealType: meal,
+              },
+            })
+          }
+        >
+          <Text style={styles.add}>＋</Text>
+        </Pressable>
+      </View>
+    </View>
 
-          {plans[meal].map((item: MealPlanItem) => (
-            <Pressable
-              key={item.plan_id}
-              onPress={() => router.push(`/screens/recipe/${item.recipe_id}`)}
-            >
-              <Text style={styles.recipe}>{item.recipe_name}</Text>
-            </Pressable>
-          ))}
-        </View>
-      ))}
+    {/* Empty */}
+    {plans[meal].length === 0 && (
+      <Text style={styles.empty}>No meals</Text>
+    )}
+
+    {/* Meals list */}
+    {plans[meal].map((item: MealPlanItem) => (
+      <View key={item.plan_id} style={styles.recipeRow}>
+        <Pressable
+          style={{ flex: 1 }}
+          onPress={() => router.push(`/screens/recipe/${item.recipe_id}`)}
+        >
+          <Text style={styles.recipe}>{item.recipe_name}</Text>
+        </Pressable>
+
+        <Pressable onPress={() => handleDelete(item.plan_id, meal)}>
+          <Text style={styles.delete}>🗑️</Text>
+        </Pressable>
+      </View>
+    ))}
+  </View>
+))}
     </View>
   );
 }
@@ -166,4 +244,27 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     color: "#666",
   },
+  recipeRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+delete: {
+  fontSize: 18,
+  color: "red",
+  paddingHorizontal: 8,
+},
+
+actions: {
+  flexDirection: "row",
+  gap: 12,
+  alignItems: "center",
+},
+
+generate: {
+  fontSize: 18,
+},
+
+
 });

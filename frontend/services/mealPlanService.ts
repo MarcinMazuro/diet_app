@@ -11,19 +11,19 @@ export interface MealPlanItem {
   date: string;
 }
 
-/* 🔹 GET meal plan by date */
 export async function getMealPlanByDate(date: string): Promise<MealPlanItem[]> {
   const res = await apiFetch(`${ENDPOINTS.MEAL_PLANS}?date=${date}`);
   const data = await res.json();
   return data.plans as MealPlanItem[];
 }
 
-/* 🔹 ADD recipe to meal plan */
+
 export async function addMealToPlan(params: {
   recipeId: number;
   date: string;
   mealType: MealType;
 }) {
+
   return apiFetch(ENDPOINTS.MEAL_PLANS, {
     method: "POST",
     body: JSON.stringify({
@@ -33,3 +33,31 @@ export async function addMealToPlan(params: {
     }),
   });
 }
+
+export async function deleteMealPlanItem(planId: number) {
+  return apiFetch(`${ENDPOINTS.MEAL_PLANS}${planId}/`, {
+    method: "DELETE",
+  });
+}
+
+export async function generateMeal(params: {
+  date: string;
+  mealType: MealType;
+}) {
+  return apiFetch("/api/recommendations/recipes/recommended/", {
+    method: "POST",
+    body: JSON.stringify({
+      date: params.date,
+      meal_type: params.mealType,
+    }),
+  });
+}
+
+export async function generateDailyPlan(date: string) {
+  return apiFetch("/api/recommendations/daily-plans/", {
+    method: "POST",
+    body: JSON.stringify({ date }),
+  });
+}
+
+
