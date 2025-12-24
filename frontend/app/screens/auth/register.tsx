@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { registerUser } from '../services/authService';
-import { useAuth } from '../contexts/AuthContext';
+import { registerUser } from '@/services/authService';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export default function RegisterScreen() {
       );
       // Navigate to main app on success
       setAuthenticated(true);
-      router.replace('/(tabs)');
+      router.replace('../(tabs)');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Registration failed';
       Alert.alert('Registration Error', msg);

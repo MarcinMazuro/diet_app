@@ -12,7 +12,7 @@ export default function TabsLayout() {
     useEffect(() => {
         if (!loading && !isAuthenticated) {
             // Navigate to log in screen if not authenticated
-            router.replace("/loginScreen");
+            router.replace("/screens/auth/loginScreen");
         }
     }, [loading, isAuthenticated]);
 
@@ -28,9 +28,9 @@ export default function TabsLayout() {
   return (
     <Tabs screenOptions={{ tabBarActiveTintColor: "coral" }} >
       <Tabs.Screen 
-        name="index" 
+        name="meal-plan" 
         options={{
-          title: "Home Screen",
+          title: "Planner",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="food-apple" size={size} color={color} />
           ),

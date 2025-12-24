@@ -11,7 +11,7 @@ const RecipeCard = React.memo(({ recipe }: { recipe: Recipe }) => {
     <Pressable
       onPress={() =>
         router.push({
-          pathname: "/screens/[id]",
+          pathname: "/screens/recipe/[id]",
           params: { id: recipe.id.toString() },
         })
       }
@@ -40,7 +40,7 @@ const RecipeCard = React.memo(({ recipe }: { recipe: Recipe }) => {
 });
 
 
-export default RecipeCard;
+export default React.memo(RecipeCard);
 
 const styles = StyleSheet.create({
   card: { backgroundColor: "#fff", borderRadius: 10, overflow: "hidden", marginBottom: 16, elevation: 2 },

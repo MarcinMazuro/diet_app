@@ -11,7 +11,7 @@ import {
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { getRecipeById, RecipeDetails } from "@/services/recipeDetailsService";
 // Import rating service and RatingStars component
-import RatingStars from "@/app/components/RatingStars";
+import RatingStars from "@/components/RatingStars";
 import {
   getRating,
   createRating,

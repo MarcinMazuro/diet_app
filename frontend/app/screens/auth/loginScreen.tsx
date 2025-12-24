@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { loginUser } from '../services/authService';
-import { useAuth } from '../contexts/AuthContext';
+import { loginUser } from '@/services/authService';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function LoginScreen() {
     try {
       await loginUser(username, password);
       setAuthenticated(true); // update auth state
-      router.replace('/(tabs)');
+      router.replace('../(tabs)');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Could not log in';
       Alert.alert('Log in error', msg);
