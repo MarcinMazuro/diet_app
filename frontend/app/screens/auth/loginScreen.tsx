@@ -23,7 +23,7 @@ export default function LoginScreen() {
     try {
       await loginUser(username, password);
       setAuthenticated(true); // update auth state
-      router.replace('../(tabs)');
+      router.replace('/(tabs)/meal-plan');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Could not log in';
       Alert.alert('Log in error', msg);
