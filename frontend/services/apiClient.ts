@@ -1,7 +1,7 @@
 // A simple API client that handles token-based authentication with automatic token refresh.
 import { API_URL } from "@/config/api";
-import { getAccessToken, refreshAccessToken } from "@/services/authService";
-
+import { getAccessToken, logoutUser, refreshAccessToken } from "@/services/authService";
+import {router} from 'expo-router'
 export async function apiFetch(
     endpoint: string,
     options: RequestInit = {},
@@ -37,7 +37,9 @@ export async function apiFetch(
                 headers: retryHeaders,
             });
         } else {
+            await logoutUser();
             throw new Error("Session expired. Please log in again.");
+            router.replace("/screens/auth/loginScreen");
         }
     }
 
