@@ -110,7 +110,13 @@ const renderFooter = React.useMemo(() => {
   // Render recipe list with infinite scrolling
    return (
     <View style={styles.searchContainer}>
-    <SearchBar onSearch={(query) => setSearchName(query)} initialValue={searchName} />
+    <SearchBar
+      onSearch={(query) => {
+        setSearchName(query);
+        loadRecipes(1, false);
+      }}
+      initialValue={searchName}
+    />
     <View style={{ marginTop: 8 }}>
       <Button title="Filters" onPress={() => setFiltersVisible(true)} />
     </View>

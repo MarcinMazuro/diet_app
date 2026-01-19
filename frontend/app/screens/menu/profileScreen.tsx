@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Button, ActivityIndicator, Alert, ScrollView } from "react-native";
+import { View, Text, TextInput, Button, ActivityIndicator, Alert, ScrollView, Platform, TouchableOpacity } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { getProfile, updateProfile, ProfileData } from "@/services/profileService";
 
 export default function ProfileScreen() {
@@ -44,6 +45,20 @@ export default function ProfileScreen() {
         if (typeof value === "string") return value.trim() === "";
         return value === null || value === undefined;
     });
+    };
+
+    const [showDatePicker, setShowDatePicker] = useState(false);
+
+    const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+    const formatDate = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    const parseDateString = (s: string) => {
+        if (!s) return new Date();
+        const parts = s.split("-");
+        if (parts.length !== 3) return new Date(s);
+        const y = Number(parts[0]);
+        const m = Number(parts[1]) - 1;
+        const d = Number(parts[2]);
+        return new Date(y, m, d);
     };
 
 
@@ -94,12 +109,29 @@ export default function ProfileScreen() {
             />
 
             <Text>Date of birth (YYYY-MM-DD)</Text>
-            <TextInput
-                value={formData.date_of_birth}
-                onChangeText={(text) => setFormData((prev) => ({ ...prev, date_of_birth: text }))}
-                placeholder="1990-01-15"
-                style={{ borderWidth: 1, padding: 8, marginVertical: 6 }}
-            />
+            <TouchableOpacity onPress={() => setShowDatePicker(true)} style={{ borderWidth: 1, padding: 8, marginVertical: 6 }}>
+                <Text>{formData.date_of_birth ? formData.date_of_birth : "Tap to select date"}</Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+                <DateTimePicker
+                    value={formData.date_of_birth ? parseDateString(formData.date_of_birth) : new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    maximumDate={new Date()}
+                    onChange={(event, selectedDate) => {
+                        if (Platform.OS === 'android') {
+                            setShowDatePicker(false);
+                            if (selectedDate) {
+                                setFormData((prev) => ({ ...prev, date_of_birth: formatDate(selectedDate) }));
+                            }
+                            return;
+                        }
+                        if (selectedDate) {
+                            setFormData((prev) => ({ ...prev, date_of_birth: formatDate(selectedDate) }));
+                        }
+                    }}
+                />
+            )}
 
             <Text>Weight (kg)</Text>
             <TextInput
