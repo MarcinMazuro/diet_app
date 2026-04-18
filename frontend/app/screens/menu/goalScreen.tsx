@@ -4,13 +4,11 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   ActivityIndicator,
   Alert,
   ScrollView,
-  StyleSheet,
+  Pressable,
 } from "react-native";
-
 import { getProfile } from "@/services/profileService";
 import { updateMacroPercentages } from "@/services/goalService";
 
@@ -24,67 +22,57 @@ export default function GoalScreen() {
   const [carbs, setCarbs] = useState("");
   const [fat, setFat] = useState("");
 
-  function fmt(n: any) {
-    return n ? parseInt(n).toString() : "0";
-  }
+  const fmt = (n: any) => (n ? parseInt(n).toString() : "0");
 
-const updateMacroInputs = (macros: any) => {
-  const mapping: { [key: string]: any } = {
-    protein: macros?.protein?.percentage ?? 0,
-    carbs: macros?.carbohydrates?.percentage ?? 0,
-    fat: macros?.fat?.percentage ?? 0,
+  const updateMacroInputs = (macros: any) => {
+    const mapping: { [key: string]: any } = {
+      protein: macros?.protein?.percentage ?? 0,
+      carbs: macros?.carbohydrates?.percentage ?? 0,
+      fat: macros?.fat?.percentage ?? 0,
+    };
+
+    setProtein(Math.round(mapping.protein).toString());
+    setCarbs(Math.round(mapping.carbs).toString());
+    setFat(Math.round(mapping.fat).toString());
   };
 
-  setProtein(Math.round(mapping.protein).toString());
-  setCarbs(Math.round(mapping.carbs).toString());
-  setFat(Math.round(mapping.fat).toString());
-};
-
-
-  // Load profile and set initial macro percentages
   const loadProfile = async () => {
     try {
       setLoading(true);
 
-      let p = await getProfile();
-      // Check if custom macros are set
+      const p = await getProfile();
       const hasCustom =
-          p.custom_protein_percentage != null ||
-          p.custom_carb_percentage != null ||
-          p.custom_fat_percentage != null;
+        p.custom_protein_percentage != null ||
+        p.custom_carb_percentage != null ||
+        p.custom_fat_percentage != null;
 
-      // Fetch updated macros from backend
       const data = await updateMacroPercentages(
-          hasCustom ? parseFloat(p.custom_protein_percentage ?? "0") : undefined,
-          hasCustom ? parseFloat(p.custom_carb_percentage ?? "0") : undefined,
-          hasCustom ? parseFloat(p.custom_fat_percentage ?? "0") : undefined
+        hasCustom ? parseFloat(p.custom_protein_percentage ?? "0") : undefined,
+        hasCustom ? parseFloat(p.custom_carb_percentage ?? "0") : undefined,
+        hasCustom ? parseFloat(p.custom_fat_percentage ?? "0") : undefined
       );
 
-      // Extract percentages and update state
       const { proteinPct, carbsPct, fatPct } = extractMacroPercentages(data);
 
-
-      // Update input fields
       setProtein(Math.round(proteinPct).toString());
       setCarbs(Math.round(carbsPct).toString());
       setFat(Math.round(fatPct).toString());
       setProfile(data);
     } catch (err) {
-      Alert.alert("Error", err instanceof Error ? err.message : "Error");
+      Alert.alert("Błąd", err instanceof Error ? err.message : "Wystąpił błąd");
     } finally {
       setLoading(false);
     }
   };
 
-  // Save updated macro percentages
   const handleSave = async () => {
     const p = parseInt(protein) || 0;
     const c = parseInt(carbs) || 0;
     const f = parseInt(fat) || 0;
-    // Validate sum equals 100
     const sum = p + c + f;
+
     if (sum !== 100) {
-      Alert.alert("Error", `The sum of protein, carbs and fat must be 100%. Currently: ${sum}%`);
+      Alert.alert("Error", `Macro percentages must sum to 100%. Currently: ${sum}%`);
       return;
     }
 
@@ -96,30 +84,25 @@ const updateMacroInputs = (macros: any) => {
         parseFloat((f / 100).toFixed(2))
       );
 
-      Alert.alert("Success", "Macros updated");
+      Alert.alert("Success", "Macros have been updated.");
       setProfile(updated);
-      // Update inputs to reflect any backend adjustments
       updateMacroInputs(updated?.calculations?.macros);
     } catch (err) {
-      Alert.alert("Error", err instanceof Error ? err.message : "Error");
+      Alert.alert("Error", err instanceof Error ? err.message : "An error occurred");
     } finally {
       setSaving(false);
     }
   };
 
-  // Reset to default macros
   const handleReset = async () => {
     setSaving(true);
     try {
-      // No parameters to reset
       const updated = await updateMacroPercentages();
       setProfile(updated);
-
       updateMacroInputs(updated?.calculations?.macros);
-
-      Alert.alert("Reset", "Macros reset to default values");
+      Alert.alert("Reset", "Macros restored to default values.");
     } catch (err) {
-      Alert.alert("Error", err instanceof Error ? err.message : "Error");
+      Alert.alert("Error", err instanceof Error ? err.message : "An error occurred");
     } finally {
       setSaving(false);
     }
@@ -131,77 +114,95 @@ const updateMacroInputs = (macros: any) => {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 justify-center items-center">
+        <ActivityIndicator size="large" color="#3b82f6" />
       </View>
     );
   }
-  // Recommended daily calories
+
   const kcal =
     profile?.calculations?.recommended_daily_calories ??
     profile?.recommended_daily_calories ??
     null;
 
   return (
-    <ScrollView style={styles.container}>
-      {kcal && <Text style={styles.title}>Daily Calories: {fmt(kcal)} kcal</Text>}
+    <ScrollView className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-100" contentContainerStyle={{ padding: 20 }}>
+      <View className="rounded-[36px] bg-white border border-blue-200 shadow-lg p-8 mb-6">
+        <Text className="text-xs uppercase tracking-widest font-semibold text-blue-400">Calorie Goal</Text>
+        {kcal && (
+          <Text className="mt-4 text-5xl font-black text-blue-900 tracking-tighter">
+            {fmt(kcal)} kcal
+          </Text>
+        )}
+        <Text className="mt-4 text-base text-blue-600 leading-relaxed">
+          Adjust the macronutrients in your diet to maintain a healthy balance.
+        </Text>
+      </View>
 
       <MacroRow
-        label="Protein %"
+        label="Protein"
         value={protein}
         onChange={setProtein}
         grams={profile?.calculations?.macros?.protein?.grams}
       />
-
       <MacroRow
-        label="Carbs %"
+        label="Carbohydrates"
         value={carbs}
         onChange={setCarbs}
         grams={profile?.calculations?.macros?.carbohydrates?.grams}
       />
-
       <MacroRow
-        label="Fat %"
+        label="Fat"
         value={fat}
         onChange={setFat}
         grams={profile?.calculations?.macros?.fat?.grams}
       />
 
-      {saving ? (
-        <ActivityIndicator size="large" />
-      ) : (
-        <>
-          <Button title="Update" onPress={handleSave} />
-          <View style={{ marginTop: 10 }} />
-          <Button title="Reset" onPress={handleReset} color="#888" />
-        </>
-      )}
+      <View className="mt-6 gap-4">
+        {saving ? (
+          <ActivityIndicator size="large" color="#3b82f6" />
+        ) : (
+          <>
+            <Pressable
+              onPress={handleSave}
+              className="rounded-[28px] bg-blue-600 py-5 items-center justify-center active:opacity-80 shadow-md"
+            >
+              <Text className="text-lg font-semibold text-white">Save Changes</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleReset}
+              className="rounded-[28px] bg-blue-100 py-5 items-center justify-center active:opacity-80"
+            >
+              <Text className="text-lg font-semibold text-blue-700">Reset to Default</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
     </ScrollView>
   );
 }
-// Component for a single macro row
+
 function MacroRow({ label, value, onChange, grams }: any) {
   const displayGrams = grams != null ? grams.toFixed(1) : "0";
+
   return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
+    <View className="rounded-[36px] bg-white border border-blue-200 shadow-lg p-6 mb-5">
+      <View className="flex-row items-center justify-between gap-4 mb-4">
+        <View>
+          <Text className="text-sm uppercase tracking-widest font-semibold text-blue-400">{label}</Text>
+          <Text className="mt-2 text-2xl font-bold text-blue-900">{displayGrams} g</Text>
+        </View>
+        <Text className="text-xs font-semibold text-blue-500">Estimated</Text>
+      </View>
       <TextInput
         value={value}
         onChangeText={(val) => onChange(val.replace(/[^0-9]/g, ""))}
         keyboardType="number-pad"
-        style={styles.input}
+        placeholder="0"
+        placeholderTextColor="#64748b"
+        className="rounded-[24px] border border-blue-300 bg-blue-50 px-5 py-4 text-blue-900 text-base"
       />
-      <Text style={styles.gramsText}>{displayGrams} g</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 16 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 20, fontWeight: "bold", marginBottom: 16, textAlign: "center" },
-  row: { marginBottom: 16 },
-  label: { fontSize: 14, marginBottom: 6 },
-  input: { borderWidth: 1, padding: 8, borderRadius: 6 },
-  gramsText: { fontSize: 14, color: "#555", marginTop: 4 },
-});

@@ -10,6 +10,7 @@ export type RecipeCategory = {
 export type Recipe = {
   id: number;
   name: string;
+  description?: string; // <--- DODANE POLE (Opcjonalne, naprawia błąd w pickerze)
   preparation_time: number;
   calories: number;
   image_url: string;

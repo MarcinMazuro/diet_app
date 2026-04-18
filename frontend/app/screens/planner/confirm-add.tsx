@@ -1,10 +1,9 @@
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
+
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { addMealToPlan } from "@/services/mealPlanService";
 import { MealType } from "@/services/mealPlanService";
-
-
 
 type Params = {
   recipeId: string;
@@ -39,82 +38,52 @@ export default function ConfirmAddScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Add meal to planner</Text>
+    <View className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 p-6 justify-center">
+      <View className="rounded-[36px] bg-white border border-blue-200 shadow-lg p-8 mb-8">
+        <Text className="text-3xl font-bold text-blue-900 text-center mb-8">
+          Add meal to planner
+        </Text>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>Recipe</Text>
-        <Text style={styles.value}>{recipeName}</Text>
+        <View className="rounded-[32px] bg-blue-50 border border-blue-200 p-6 mb-8">
+          <Text className="text-sm uppercase tracking-widest font-semibold text-blue-500 mt-2">
+            Recipe
+          </Text>
+          <Text className="text-lg font-medium text-blue-900 mt-3">
+            {recipeName}
+          </Text>
 
-        <Text style={styles.label}>Date</Text>
-        <Text style={styles.value}>{date}</Text>
+          <Text className="text-sm uppercase tracking-widest font-semibold text-blue-500 mt-6">
+            Date
+          </Text>
+          <Text className="text-lg font-medium text-blue-900 mt-3">{date}</Text>
 
-        <Text style={styles.label}>Meal type</Text>
-        <Text style={styles.value}>{mealType}</Text>
-      </View>
-
-      {loading ? (
-        <ActivityIndicator />
-      ) : (
-        <View style={styles.actions}>
-          <Pressable style={styles.cancel} onPress={() => router.back()}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </Pressable>
-
-          <Pressable style={styles.confirm} onPress={handleConfirm}>
-            <Text style={styles.confirmText}>Add</Text>
-          </Pressable>
+          <Text className="text-sm uppercase tracking-widest font-semibold text-blue-500 mt-6">
+            Meal type
+          </Text>
+          <Text className="text-lg font-medium text-blue-900 mt-3">{mealType}</Text>
         </View>
-      )}
+
+        {loading ? (
+          <View className="items-center">
+            <ActivityIndicator size="large" color="#3b82f6" />
+          </View>
+        ) : (
+          <View className="flex-row justify-between gap-4">
+            <Pressable
+              className="flex-1 rounded-[28px] border border-blue-300 bg-white py-5 items-center shadow-md"
+              onPress={() => router.back()}
+            >
+              <Text className="text-lg font-medium text-blue-600">Cancel</Text>
+            </Pressable>
+            <Pressable
+              className="flex-1 rounded-[28px] bg-blue-600 py-5 items-center shadow-md"
+              onPress={handleConfirm}
+            >
+              <Text className="text-lg font-semibold text-white">Add</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
     </View>
   );
 }
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 24,
-    textAlign: "center",
-  },
-  card: {
-    backgroundColor: "#f3f3f3",
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 12,
-    color: "#666",
-    marginTop: 8,
-  },
-  value: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  cancel: {
-    padding: 14,
-  },
-  cancelText: {
-    color: "#888",
-    fontSize: 16,
-  },
-  confirm: {
-    backgroundColor: "green",
-    padding: 14,
-    borderRadius: 8,
-  },
-  confirmText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-});

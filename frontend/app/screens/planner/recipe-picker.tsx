@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { View, FlatList, Text, Pressable, ActivityIndicator, StyleSheet, Button } from "react-native";
+import { useEffect, useState, useCallback } from "react";
+import { View, FlatList, Text, Pressable, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getRecipes, Recipe } from "@/services/recipeService";
 import FilterModal from "@/components/FilterModal";
@@ -47,8 +47,6 @@ export default function RecipePickerScreen() {
     }
   };
 
-
-
   useEffect(() => {
     loadRecipes(1, false);
   }, [search, selectedCategory, minCalories, maxCalories]);
@@ -76,35 +74,59 @@ export default function RecipePickerScreen() {
   const renderItem = useCallback(
     ({ item }: { item: Recipe }) => (
       <Pressable
-        style={styles.row}
-        onPress={() => router.push(`/screens/recipe/${item.id}`)}
+        onPress={() =>
+          router.push({
+            pathname: `/screens/recipe/${item.id}` as any,
+            params: {
+              fromPlanner: "true",
+              date,
+              mealType,
+            },
+          } as any)
+        }
+        className="mb-4 rounded-[32px] bg-white border border-blue-200 shadow-lg overflow-hidden active:opacity-80"
       >
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.meta}>{item.calories} kcal • {item.preparation_time} min</Text>
-        </View>
+        <View className="p-5">
+          <View className="flex-row justify-between items-start gap-4">
+            <View className="flex-1">
+              <Text className="text-xl font-bold text-blue-900 leading-tight">{item.name}</Text>
+              {item.calories && (
+                <Text className="text-base text-blue-600 mt-2">{Math.round(item.calories)} kcal</Text>
+              )}
+            </View>
+          </View>
 
-        <Pressable
-          onPress={() =>
-            router.push({
-              pathname: "/screens/planner/confirm-add",
-              params: { recipeId: item.id.toString(),recipeName:item.name, date, mealType },
-            })
-          }
-        >
-          <Text style={styles.add}>＋</Text>
-        </Pressable>
+          {item.description && (
+            <Text className="text-sm text-blue-700 leading-relaxed mt-3" numberOfLines={2}>
+              {item.description}
+            </Text>
+          )}
+          
+          <Text className="text-xs text-blue-500 mt-3">Tap for details</Text>
+        </View>
       </Pressable>
     ),
-    [date, mealType]
+    [date, mealType, router]
   );
 
-  if (loading && page === 1) return <ActivityIndicator style={{ marginTop: 40 }} />;
+  if (loading && page === 1) {
+    return (
+      <View className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 justify-center items-center">
+        <ActivityIndicator size="large" color="#3b82f6" />
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <SearchBar onSearch={setSearch} initialValue={search} />
-      <Button title="Filters" onPress={() => setFiltersVisible(true)} />
+
+      <Pressable
+        className="mb-4 rounded-[28px] bg-white border border-blue-200 py-5 items-center shadow-sm"
+        onPress={() => setFiltersVisible(true)}
+      >
+        <Text className="text-lg font-semibold text-blue-700">Filters</Text>
+      </Pressable>
 
       <FlatList
         data={recipes}
@@ -116,7 +138,12 @@ export default function RecipePickerScreen() {
         maxToRenderPerBatch={10}
         windowSize={5}
         removeClippedSubviews
-        ListFooterComponent={loadingMore ? <ActivityIndicator style={{ margin: 16 }} /> : null}
+        contentContainerStyle={{ paddingBottom: 24 }}
+        ListFooterComponent={
+          loadingMore ? (
+            <ActivityIndicator className="my-4" size="small" color="#3b82f6" />
+          ) : null
+        }
       />
 
       <FilterModal
@@ -130,11 +157,3 @@ export default function RecipePickerScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 12 },
-  row: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderColor: "#eee" },
-  name: { fontSize: 16, fontWeight: "500" },
-  meta: { fontSize: 12, color: "#666" },
-  add: { fontSize: 26, color: "green", paddingHorizontal: 12 },
-});

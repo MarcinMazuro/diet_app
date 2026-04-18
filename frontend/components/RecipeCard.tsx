@@ -1,36 +1,27 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, Pressable } from "react-native";
 import { Recipe } from "@/services/recipeService";
-import {Pressable} from "react-native";
-import {useRouter} from "expo-router";
+import { useRouter } from "expo-router";
 
 const RecipeCard = React.memo(({ recipe }: { recipe: Recipe }) => {
   const router = useRouter();
-// Pressable routes to recipe details on press and sends recipe id as param
   return (
     <Pressable
-      onPress={() =>
-        router.push({
-          pathname: "/screens/recipe/[id]",
-          params: { id: recipe.id.toString() },
-        })
-      }
-      style={({ pressed }) => [
-        styles.card,
-        pressed && { opacity: 0.85 },
-      ]}
+      onPress={() => router.push(`/screens/recipe/${recipe.id}`)}
+      className="mb-5 overflow-hidden rounded-[36px] bg-white shadow-lg border border-blue-200"
+      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
     >
-      <Image source={{ uri: recipe.image_url }} style={styles.image} />
+      <Image source={{ uri: recipe.image_url }} className="h-48 w-full" />
 
-      <View style={styles.info}>
-        <Text style={styles.name}>{recipe.name}</Text>
+      <View className="p-6">
+        <Text className="text-lg font-semibold text-blue-900 mb-2">{recipe.name}</Text>
 
-        <Text style={styles.meta}>
+        <Text className="text-base text-blue-600 mb-3">
           {recipe.calories} kcal • {recipe.preparation_time} min • {recipe.servings} servings
         </Text>
 
         {recipe.categories.length > 0 && (
-          <Text style={styles.categories}>
+          <Text className="text-sm text-blue-500">
             {recipe.categories.map((c) => c.name).join(", ")}
           </Text>
         )}
@@ -39,14 +30,4 @@ const RecipeCard = React.memo(({ recipe }: { recipe: Recipe }) => {
   );
 });
 
-
 export default React.memo(RecipeCard);
-
-const styles = StyleSheet.create({
-  card: { backgroundColor: "#fff", borderRadius: 10, overflow: "hidden", marginBottom: 16, elevation: 2 },
-  image: { width: "100%", height: 180 },
-  info: { padding: 12 },
-  name: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
-  meta: { fontSize: 13, color: "#555" },
-  categories: { marginTop: 4, fontSize: 12, color: "#888" },
-});

@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import { View, TextInput, Button, StyleSheet } from "react-native";
+import { useState } from "react";
+import { View, TextInput, Pressable, Text } from "react-native";
 
-// Props for SearchBar component
 interface SearchBarProps {
   onSearch: (query: string) => void;
   initialValue?: string;
@@ -11,21 +10,21 @@ export default function SearchBar({ onSearch, initialValue = "" }: SearchBarProp
   const [value, setValue] = useState(initialValue);
 
   return (
-    <View style={styles.container}>
+    <View className="mb-4 flex-row items-center gap-4">
       <TextInput
         placeholder="Search..."
         value={value}
         onChangeText={setValue}
-        style={styles.input}
+        className="flex-1 rounded-[28px] border border-blue-300 bg-white px-5 py-4 text-blue-900 text-base"
         returnKeyType="search"
         onSubmitEditing={() => onSearch(value)}
       />
-      <Button title="Search" onPress={() => onSearch(value)} />
+      <Pressable
+        className="rounded-[28px] bg-blue-600 px-6 py-4"
+        onPress={() => onSearch(value)}
+      >
+        <Text className="text-base font-semibold text-white">Search</Text>
+      </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flexDirection: "row", gap: 8, marginBottom: 12 },
-  input: { flex: 1, borderWidth: 1, borderColor: "#ddd", borderRadius: 6, padding: 8 },
-});
