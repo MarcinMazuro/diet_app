@@ -78,7 +78,7 @@ def list_recipes(request):
 def get_recipe(request, recipe_id):
     """Returns a specific recipe by ID"""
     try:
-        recipe = Recipe.objects.get(id=recipe_id)
+        recipe = Recipe.objects.prefetch_related('categories').get(id=recipe_id)
     except Recipe.DoesNotExist:
         return Response({'error': 'Recipe not found'}, status=status.HTTP_404_NOT_FOUND)
 
