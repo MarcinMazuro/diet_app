@@ -8,6 +8,7 @@ django-cors-headers==4.9.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 idna==3.11
+ingredient-parser-nlp==2.6.0
 psycopg2-binary==2.9.11
 PyJWT==2.10.1
 python-dotenv==1.1.1
