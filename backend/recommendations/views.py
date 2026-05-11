@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from recipes.serializers import SingleRecipeSerializer
 from .models import Meal, Rating, MealSource, MealType
-from .services import RecipeMatcher, MealPlanner
+from .services import RecipeMatcher, MealPlanner, RecommenderEngine
 from .utils import get_user_profile, validate_date, validate_meal_type, get_recipe_or_404
 
 
@@ -33,10 +33,11 @@ def recommend_recipe(request):
     if error:
         return error
 
-    matcher = RecipeMatcher()
+    matcher = RecommenderEngine()
     recipe = matcher.find_best_recipe(
         profile=profile,
         meal_type=meal_type,
+        date=dt,
     )
 
     if not recipe:
@@ -81,7 +82,7 @@ def generate_daily_meal_plan(request):
         return error
 
     planner = MealPlanner()
-    meal_plan = planner.create_meal_plan(profile=profile)
+    meal_plan = planner.create_meal_plan(profile=profile, date=dt)
 
     if not meal_plan:
         return Response(

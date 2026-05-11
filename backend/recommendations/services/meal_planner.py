@@ -1,3 +1,4 @@
+import datetime
 from typing import Dict, Optional, Any
 from dataclasses import dataclass
 from recipes.models import Recipe
@@ -5,6 +6,7 @@ from profiles.models import Profile
 from recipes.serializers import SingleRecipeSerializer
 from ..models import MealType
 from .recipe_matcher import RecipeMatcher
+from .recommender_engine import RecommenderEngine
 
 
 @dataclass
@@ -76,15 +78,34 @@ class MealPlanner:
     """Service for generating complete daily meal plans"""
 
     def __init__(self):
-        self.matcher = RecipeMatcher()
+        self.matcher = RecommenderEngine()
 
-    def create_meal_plan(self, profile: Profile) -> Optional[MealPlan]:
+    def create_meal_plan(self, profile: Profile, date: Optional[datetime.date] = None) -> Optional[MealPlan]:
+        today = date or datetime.date.today()
         plan = MealPlan()
+        planned: list[Recipe] = []
 
-        plan.breakfast = self.matcher.find_best_recipe(profile, MealType.BREAKFAST, try_relaxed=True)
-        plan.lunch = self.matcher.find_best_recipe(profile, MealType.LUNCH, try_relaxed=True)
-        plan.dinner = self.matcher.find_best_recipe(profile, MealType.DINNER, try_relaxed=True)
-        plan.snack = self.matcher.find_best_recipe(profile, MealType.SNACK, try_relaxed=True)
+        plan.breakfast = self.matcher.find_best_recipe(
+            profile, MealType.BREAKFAST, date=today, already_planned=planned, try_relaxed=True
+        )
+        if plan.breakfast:
+            planned.append(plan.breakfast)
+
+        plan.lunch = self.matcher.find_best_recipe(
+            profile, MealType.LUNCH, date=today, already_planned=planned, try_relaxed=True
+        )
+        if plan.lunch:
+            planned.append(plan.lunch)
+
+        plan.dinner = self.matcher.find_best_recipe(
+            profile, MealType.DINNER, date=today, already_planned=planned, try_relaxed=True
+        )
+        if plan.dinner:
+            planned.append(plan.dinner)
+
+        plan.snack = self.matcher.find_best_recipe(
+            profile, MealType.SNACK, date=today, already_planned=planned, try_relaxed=True
+        )
 
         if not (plan.breakfast and plan.lunch and plan.dinner and plan.snack):
             return None
